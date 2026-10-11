@@ -1,127 +1,102 @@
-const container = document.getElementById('imagesPreviewContainer');
-                    loadedProductImages.forEach(img => {
-                        const imgTag = document.createElement('img');
-                        imgTag.src = img;
-                        imgTag.className = 'w-16 h-16 object-cover rounded-lg border shadow-sm';
-                        container.appendChild(imgTag);
-                    });
-                }
-            } else {
-                document.getElementById('productFormTitle').textContent = 'Додати новий товар';
-                document.getElementById('editProdId').value = '';
-            }
+<!DOCTYPE html>
+<html lang="uk" class="no-touch">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaStore — Опт та Роздріб (Одеса)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .category-card:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
+        .product-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
-            document.getElementById('productFormModal').classList.remove('hidden');
-        }
+    <!-- Верхня панель / Шапка -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Логотип -->
+            <div class="flex items-center space-x-2">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-xl">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight text-indigo-900">MegaStore</span>
+                    <span class="block text-xs text-gray-500">Опт та Роздріб • Одеса</span>
+                </div>
+            </div>
 
-        function closeProductFormModal() {
-            document.getElementById('productFormModal').classList.add('hidden');
-        }
+            <!-- Пошук -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-6 relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" placeholder="Пошук товарів, брендів..." class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-indigo-500 text-sm">
+            </div>
 
-        // ИИ-парсер текста (базовая логика извлечения цен, размеров и названий)
-        function parseWithAI() {
-            const text = document.getElementById('aiInputText').value;
-            if (!text.trim()) return alert('Вставте текст постачальника для розбору!');
+            <!-- Дії (Контакти / Кошик) -->
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:block text-right text-xs">
+                    <span class="block text-gray-500">Замовлення та консультації:</span>
+                    <a href="tel:+380480000000" class="font-bold text-indigo-600 hover:text-indigo-800">+38 (048) 000-00-00</a>
+                </div>
+                <button class="relative bg-indigo-50 text-indigo-600 p-2.5 rounded-full hover:bg-indigo-100 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-            // Простая эвристика поиска цен, размеров и строк
-            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-            if (lines.length > 0) {
-                document.getElementById('prodTitle').value = lines[0];
-            }
+    <!-- Основний контент -->
+    <main class="container mx-auto px-4 py-6 flex-1">
+        <!-- Головний банер -->
+        <section class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white p-8 md:p-12 mb-8 shadow-xl">
+            <div class="max-w-2xl">
+                <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-4">Склад-магазин в Одесі</span>
+                <h1 class="text-3xl md:text-4xl font-extxl font-bold mb-4">Товари оптом та в роздріб за найкращими цінами</h1>
+                <p class="text-indigo-100 mb-6 text-sm md:text-base">Широкий асортимент продукції, швидка доставка по Одесі та всій Україні, вигідні умови для партнерів.</p>
+                <button class="bg-white text-indigo-600 font-bold px-6 py-3 rounded-xl shadow-md hover:bg-indigo-50 transition">Перейти до каталогу</button>
+            </div>
+        </section>
 
-            const fullText = text.toLowerCase();
-            
-            // Ищем цифры цен (грн / грн.)
-            const priceMatch = text.match(/(\d+)\s*(грн|грн\.|uah)/i);
-            if (priceMatch) {
-                const val = parseInt(priceMatch[1]);
-                document.getElementById('prodPrice').value = val;
-                document.getElementById('prodBoxPrice').value = val * 5; // Пример для ростовки по умолчанию
-            }
+        <!-- Категорії -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Популярні категорії</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center cursor-pointer">
+                    <div class="text-indigo-600 text-3xl mb-2"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <h3 class="font-semibold text-sm">Електроніка</h3>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center cursor-pointer">
+                    <div class="text-purple-600 text-3xl mb-2"><i class="fa-solid fa-shirt"></i></div>
+                    <h3 class="font-semibold text-sm">Одяг та взуття</h3>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center cursor-pointer">
+                    <div class="text-emerald-600 text-3xl mb-2"><i class="fa-solid fa-house"></i></div>
+                    <h3 class="font-semibold text-sm">Дім і затишок</h3>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center cursor-pointer">
+                    <div class="text-amber-500 text-3xl mb-2"><i class="fa-solid fa-toolbox"></i></div>
+                    <h3 class="font-semibold text-sm">Інструменти</h3>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center cursor-pointer">
+                    <div class="text-pink-500 text-3xl mb-2"><i class="fa-solid fa-child-reaching"></i></div>
+                    <h3 class="font-semibold text-sm">Дитячі товари</h3>
+                </div>
+            </div>
+        </section>
+    </main>
 
-            // Ищем размеры (S, M, L, XL, 2XL и т.д.)
-            const sizesMatch = text.match(/(s|m|l|xl|xxl|\d{2}[-\s]*\d{2})/i);
-            if (sizesMatch) {
-                document.getElementById('prodSizes').value = text.match(/[sml\d\-\,\s]{3,15}/i)?.[0] || 'S, M, L, XL';
-            }
+    <!-- Підвал сайту -->
+    <footer class="bg-gray-800 text-white py-8 mt-auto">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-400">
+            <p>&copy; 2026 MegaStore (Одеса). Всі права захищені. Оптові та роздрібні поставки.</p>
+        </div>
+    </footer>
 
-            document.getElementById('prodBoxQty').value = '5';
-            document.getElementById('prodDesc').value = text;
-            alert('✨ ШІ успішно розібрав текст та заповнив поля!');
-        }
-
-        function saveProduct(event) {
-            event.preventDefault();
-            const idVal = document.getElementById('editProdId').value;
-            
-            const productData = {
-                id: idVal ? parseInt(idVal) : Date.now(),
-                title: document.getElementById('prodTitle').value,
-                category: document.getElementById('prodCategory').value,
-                color: document.getElementById('prodColor').value,
-                price: parseFloat(document.getElementById('prodPrice').value),
-                boxPrice: parseFloat(document.getElementById('prodBoxPrice').value),
-                boxQty: parseInt(document.getElementById('prodBoxQty').value),
-                sizes: document.getElementById('prodSizes').value,
-                desc: document.getElementById('prodDesc').value,
-                images: loadedProductImages.length > 0 ? loadedProductImages : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500']
-            };
-
-            if (idVal) {
-                const index = products.findIndex(p => p.id === productData.id);
-                if (index !== -1) products[index] = productData;
-            } else {
-                products.unshift(productData);
-            }
-
-            hasUnsavedChanges = true;
-            closeProductFormModal();
-            renderProducts();
-            alert('Товар успішно збережено!');
-        }
-
-        function editProduct(id) {
-            openProductFormModal(id);
-        }
-
-        function deleteProduct(id) {
-            if (confirm('Ви впевнені, що хочете видалити цей товар?')) {
-                products = products.filter(p => p.id !== id);
-                hasUnsavedChanges = true;
-                renderProducts();
-            }
-        }
-
-        // Функция экспорта (скачивания) обновленного кода сайта со всеми товарами
-        function exportSiteCode() {
-            // Получаем актуальный HTML документ, подставляя актуальный массив товаров
-            let fullHtml = document.documentElement.outerHTML;
-            
-            // Автоматически заменяем текущий массив products внутри скрипта на актуальный из памяти
-            const productsScriptRegex = /let products = \[[\s\S]*?\];/;
-            const newProductsCode = `let products = ${JSON.stringify(products, null, 4)};`;
-            
-            if (productsScriptRegex.test(fullHtml)) {
-                fullHtml = fullHtml.replace(productsScriptRegex, newProductsCode);
-            }
-
-            const blob = new Blob([<!DOCTYPE html>\n + fullHtml], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            hasUnsavedChanges = false;
-            alert('📥 Код успішно скачано! Замініть ним файл index.html у вашому репозиторії GitHub.');
-        }
-
-        // Инициализация при загрузке
-        renderProducts();
-        updateCart();
-    </script>
 </body>
 </html>
