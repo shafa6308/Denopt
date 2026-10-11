@@ -1,561 +1,4 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MegaStore — Опт та Роздріб (Одеса)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .category-card:hover { transform: translateY(-3px); }
-        .product-card:hover { transform: translateY(-5px); }
-    </style>
-</head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
-
-    <!-- Шапка Администратора -->
-    <div id="adminTopBar" class="bg-red-600 text-white px-4 py-2 hidden shadow-md sticky top-0 z-50 flex justify-between items-center flex-wrap gap-2">
-        <div class="flex items-center space-x-2 font-bold text-sm">
-            <i class="fas fa-tools"></i>
-            <span>РЕЖИМ АДМІНІСТРУВАННЯ</span>
-        </div>
-        <div class="flex items-center space-x-2 flex-wrap gap-1">
-            <button onclick="switchAdminTab('products')" id="adminTabProdBtn" class="bg-red-700 hover:bg-red-800 px-3 py-1 rounded text-xs font-bold transition">Товари та каталоги</button>
-            <button onclick="switchAdminTab('orders')" id="adminTabOrdBtn" class="bg-red-700 hover:bg-red-800 px-3 py-1 rounded text-xs font-bold transition">Замовлення (<span id="ordersCountBadge">0</span>)</button>
-            <button onclick="exportSiteCode()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-bold transition"><i class="fas fa-download"></i> Скачати код</button>
-            <button onclick="openProductFormModal()" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-bold transition"><i class="fas fa-plus"></i> Додати товар</button>
-            <button onclick="exitAdmin()" class="bg-gray-800 hover:bg-gray-900 px-3 py-1 rounded text-xs font-bold transition">Вийти з адмінки</button>
-        </div>
-    </div>
-
-    <!-- Основной Хедер магазина -->
-    <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div id="logo" class="text-2xl font-bold cursor-pointer select-none flex items-center space-x-2">
-                <i class="fas fa-store"></i>
-                <span>MegaStore <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded">Одеса (Опт/Роздріб)</span></span>
-            </div>
-
-            <div class="flex-1 max-w-md mx-4 hidden md:block">
-                <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Пошук товарів..." 
-                        class="w-full pl-10 pr-4 py-2 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                </div>
-            </div>
-
-            <button id="cartBtn" class="relative bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-full transition flex items-center space-x-2">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="font-semibold">Кошик</span>
-                <span id="cartCount" class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Главный контент -->
-    <main class="container mx-auto px-4 py-6 flex-1">
-        
-        <div id="adminOrdersSection" class="hidden mb-8 bg-white p-6 rounded-2xl shadow-sm border">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Список замовлень від покупців</h3>
-            <div id="adminOrdersList" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
-        </div>
-
-        <!-- Категории -->
-        <section class="mb-8" id="categoriesSection">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Категорії</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                <button onclick="filterCategory('all')" class="category-btn bg-white p-4 rounded-xl shadow-sm text-center border-2 border-indigo-500 hover:border-indigo-600 transition">
-                    <i class="fas fa-th text-2xl text-indigo-500 mb-2"></i>
-                    <div class="font-semibold text-sm">Всі товари</div>
-                </button>
-                <button onclick="filterCategory('women')" class="category-btn bg-white p-4 rounded-xl shadow-sm text-center border-2 border-transparent hover:border-indigo-500 transition">
-                    <i class="fas fa-female text-2xl text-pink-500 mb-2"></i>
-                    <div class="font-semibold text-sm">Жіночий одяг</div>
-                </button>
-                <button onclick="filterCategory('men')" class="category-btn bg-white p-4 rounded-xl shadow-sm text-center border-2 border-transparent hover:border-indigo-500 transition">
-                    <i class="fas fa-male text-2xl text-blue-500 mb-2"></i>
-                    <div class="font-semibold text-sm">Чоловічий одяг</div>
-                </button>
-                <button onclick="filterCategory('shoes')" class="category-btn bg-white p-4 rounded-xl shadow-sm text-center border-2 border-transparent hover:border-indigo-500 transition">
-                    <i class="fas fa-shoe-prints text-2xl text-amber-500 mb-2"></i>
-                    <div class="font-semibold text-sm">Взуття</div>
-                </button>
-                <button onclick="filterCategory('tech')" class="category-btn bg-white p-4 rounded-xl shadow-sm text-center border-2 border-transparent hover:border-indigo-500 transition">
-                    <i class="fas fa-plug text-2xl text-emerald-500 mb-2"></i>
-                    <div class="font-semibold text-sm">Міні-техніка</div>
-                </button>
-            </div>
-        </section>
-
-        <!-- Сетка товаров -->
-        <section>
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-700" id="sectionTitle">Каталог товарів</h2>
-                <span id="adminStatusText" class="text-xs font-bold text-red-600 hidden">Режим редагування увімкнено</span>
-            </div>
-            <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Товары рендерятся через JS -->
-            </div>
-        </section>
-    </main>
-
-    <!-- Модальное окно полной информации о товаре -->
-    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto relative">
-            <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-            <div id="productModalContent"></div>
-        </div>
-    </div>
-
-    <!-- Модальное окно корзины -->
-    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-end">
-        <div class="bg-white w-full max-w-md h-full flex flex-col p-6 shadow-xl overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Ваш кошик</h3>
-                <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="cartItems" class="flex-1 space-y-4 mb-4"></div>
-            
-            <div class="border-t pt-4 space-y-3">
-                <h4 class="font-bold text-gray-700">Дані для доставки (Одеса / Україна)</h4>
-                <input type="text" id="orderName" placeholder="Ваше ім'я та прізвище" class="w-full border rounded-lg p-2 text-sm" required>
-                <input type="tel" id="orderPhone" placeholder="Телефон (наприклад, 0931234567)" class="w-full border rounded-lg p-2 text-sm" required>
-                <input type="text" id="orderAddress" placeholder="Адреса (місто, відділення Нової Пошти)" class="w-full border rounded-lg p-2 text-sm" required>
-            </div>
-
-            <div class="border-t pt-4 mt-4">
-                <div class="flex justify-between text-lg font-bold mb-4">
-                    <span>Разом:</span>
-                    <span id="cartTotal">0 грн</span>
-                </div>
-                <button onclick="checkout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition">
-                    Оформити замовлення
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно создания/редактирования товара -->
-    <div id="productFormModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[95vh] overflow-y-auto relative">
-            <button onclick="closeProductFormModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-            
-            <h3 id="productFormTitle" class="text-xl font-bold text-gray-800 mb-4">Додати новий товар</h3>
-
-            <!-- ИИ Автозаполнение по ТЕКСТУ -->
-            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 space-y-2">
-                <label class="block text-xs font-bold text-indigo-900 flex items-center space-x-1">
-                    <i class="fas fa-robot text-indigo-600"></i>
-                    <span>Розумне автозаповнення за текстом (ШІ)</span>
-                </label>
-                <textarea id="aiInputText" placeholder="Вставте текст постачальника (напр: Жіночі штани... Колір синій. Ростовка 5 од. Розміри S-2XL. Ціна 250 грн)..." rows="3" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
-                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition w-full">
-                    ✨ Розібрати текст автоматично
-                </button>
-            </div>
-
-            <form id="productEditForm" class="space-y-3" onsubmit="saveProduct(event)">
-                <input type="hidden" id="editProdId">
-                
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару</label>
-                    <input type="text" id="prodTitle" required class="w-full border rounded-lg p-2 text-sm">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Категорія</label>
-                        <select id="prodCategory" class="w-full border rounded-lg p-2 text-sm">
-                            <option value="women">Жіночий одяг</option>
-                            <option value="men">Чоловічий одяг</option>
-                            <option value="shoes">Взуття</option>
-                            <option value="tech">Міні-техніка</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Колір (Color)</label>
-                        <input type="text" id="prodColor" placeholder="напр. Синій / Джинс" class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Фотографії товару (можна вибрати до 10 штук)</label>
-                    <input type="file" id="prodImageFiles" accept="image/*" multiple class="w-full border rounded-lg p-1 text-xs bg-gray-50 cursor-pointer" onchange="handleMultipleImagesUpload(event)">
-                    <div id="imagesPreviewContainer" class="flex flex-wrap gap-2 mt-2"></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за 1 шт (роздріб)</label>
-                        <input type="number" id="prodPrice" required class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за ростовку (опт)</label>
-                        <input type="number" id="prodBoxPrice" required class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Штук у ростовці</label>
-                        <input type="number" id="prodBoxQty" required class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Розміри</label>
-                        <input type="text" id="prodSizes" required class="w-full border rounded-lg p-2 text-sm" placeholder="напр. S, M, L, XL, 2XL">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Опис товару</label>
-                    <textarea id="prodDesc" rows="3" required class="w-full border rounded-lg p-2 text-sm"></textarea>
-                </div>
-
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm transition">
-                    Зберегти товар
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Скрипт логики -->
-    <script>
-        let products = [
-            { 
-                id: 1, 
-                title: 'Жіночі теплі штани з утеплювачем з велюру Adidas', 
-                category: 'women', 
-                color: 'Синій',
-                price: 250, 
-                boxPrice: 1250, 
-                boxQty: 5, 
-                sizes: 'S, M, L, XL, 2XL', 
-                desc: 'Матеріал: Верх – бавовняна суміш, внутрішній шар – велюр.\nЗручні кишені на блискавках, еластичний пояс із регульованим шнурком.\nМ\'який велюр усередині, ідеальний для холодної погоди.', 
-                images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500'] 
-            }
-        ];
-
-        let loadedProductImages = [];
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        let orders = JSON.parse(localStorage.getItem('orders')) || [];
-        let logoClicks = 0;
-        let isAdminMode = false;
-        let hasUnsavedChanges = false;
-
-        function renderProducts(items = products) {
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = items.map(product => {
-                const mainImg = (product.images && product.images.length > 0) ? product.images[0] : (product.img || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500');
-                const badgeCount = (product.images && product.images.length > 1) ? `<span class="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-[10px] px-2 py-0.5 rounded-full"><i class="fas fa-camera"></i> ${product.images.length}</span>` : '';
-                const colorBadge = product.color ? `<div class="text-xs text-indigo-600 font-semibold mb-1">Колір: ${product.color}</div>` : '';
-
-                return `
-                    <div class="product-card bg-white rounded-2xl shadow-sm hover:shadow-md transition p-4 flex flex-col cursor-pointer relative" onclick="handleProductClick(event, ${product.id})">
-                        <div class="relative mb-3">
-                            <img src="${mainImg}" alt="${product.title}" class="w-full h-48 object-cover rounded-xl pointer-events-none">
-                            ${badgeCount}
-                        </div>
-                        <h3 class="font-bold text-gray-800 mb-1 flex-1">${product.title}</h3>
-                        ${colorBadge}
-                        <div class="text-xs text-gray-500 mb-2">Розміри: ${product.sizes}</div>
-                        
-                        <div class="flex items-center justify-between mt-auto pt-2 border-t">
-                            <div>
-                                <div class="text-xs text-gray-500">Ціна за 1 шт: <span class="font-bold text-gray-700">${product.price} грн</span></div>
-                                <div class="text-sm font-semibold text-emerald-600">${product.boxPrice} грн <span class="text-gray-500 font-normal text-xs">/ ростовка (${product.boxQty} шт)</span></div>
-                            </div>
-                            ${isAdminMode ? '' : '<span class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white p-2 rounded-xl transition text-xs font-bold">Опт</span>'}
-                        </div>
-
-                        ${isAdminMode ? `
-                            <div class="mt-3 pt-2 border-t flex space-x-2">
-                                <button onclick="event.stopPropagation(); editProduct(${product.id})" class="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white py-1.5 rounded-lg text-xs font-bold transition text-center">Редагувати</button>
-                                <button onclick="event.stopPropagation(); deleteProduct(${product.id})" class="flex-1 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white py-1.5 rounded-lg text-xs font-bold transition text-center">Видалити</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function handleProductClick(event, id) {
-            if (isAdminMode) return;
-            openProductModal(id);
-        }
-
-        function openProductModal(id) {
-            const p = products.find(prod => prod.id === id);
-            if (!p) return;
-
-            const imgList = (p.images && p.images.length > 0) ? p.images : [(p.img || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500')];
-            const colorHtml = p.color ? `<div class="text-xs font-bold text-indigo-600 mb-2"><i class="fas fa-palette"></i> Колір: ${p.color}</div>` : '';
-
-            const thumbnailsHtml = imgList.length > 1 ? `
-                <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
-                    ${imgList.map((img) => `
-                        <img src="${img}" onclick="switchModalMainImage('${img}')" class="w-14 h-14 object-cover rounded-lg border-2 border-transparent hover:border-indigo-600 cursor-pointer transition">
-                    `).join('')}
-                </div>
-            ` : '';
-
-            document.getElementById('productModalContent').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <img id="modalMainImg" src="${imgList[0]}" alt="${p.title}" class="w-full h-72 object-cover rounded-xl shadow">
-                        ${thumbnailsHtml}
-                    </div>
-                    <div class="flex flex-col justify-between">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-800 mb-1">${p.title}</h2>
-                            ${colorHtml}
-                            <p class="text-sm text-gray-600 mb-4 whitespace-pre-line">${p.desc}</p>
-                            <div class="bg-gray-50 p-3 rounded-xl border mb-4 space-y-1 text-sm">
-                                <div class="font-semibold text-gray-700">Розмірна сітка:</div>
-                                <div class="text-indigo-600 font-bold">${p.sizes}</div>
-                            </div>
-                        </div>
-                        <div class="space-y-4 pt-4 border-t">
-                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border">
-                                <div>
-                                    <div class="text-xs text-gray-500">Роздрібна ціна за 1 шт:</div>
-                                    <div class="text-lg font-bold text-gray-700">${p.price} грн</div>
-                                </div>
-                            </div>
-
-                            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="text-lg font-bold text-emerald-700">${p.boxPrice} грн</div>
-                                        <div class="text-xs text-emerald-800">Ціна за 1 ростовку (${p.boxQty} шт)</div>
-                                    </div>
-                                    <div class="flex items-center space-x-2 bg-white border border-emerald-300 rounded-xl px-2 py-1 shadow-sm">
-                                        <button onclick="changeModalQty(-1)" class="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold text-gray-700 transition flex items-center justify-center">-</button>
-                                        <span id="modalBoxQtyCount" class="font-bold text-lg w-8 text-center">1</span>
-                                        <button onclick="changeModalQty(1)" class="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold text-gray-700 transition flex items-center justify-center">+</button>
-                                    </div>
-                                </div>
-                                <button onclick="addBoxToCart(${p.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-bold transition shadow">
-                                    Додати ростовки в кошик (<span id="modalTotalPrice">${p.boxPrice}</span> грн)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            window.currentModalProduct = p;
-            window.currentModalBoxes = 1;
-            document.getElementById('productModal').classList.remove('hidden');
-        }
-
-        function switchModalMainImage(src) {
-            document.getElementById('modalMainImg').src = src;
-        }
-
-        function changeModalQty(delta) {
-            window.currentModalBoxes += delta;
-            if (window.currentModalBoxes < 1) window.currentModalBoxes = 1;
-            document.getElementById('modalBoxQtyCount').textContent = window.currentModalBoxes;
-            document.getElementById('modalTotalPrice').textContent = window.currentModalProduct.boxPrice * window.currentModalBoxes;
-        }
-
-        function addBoxToCart(id) {
-            const p = products.find(prod => prod.id === id);
-            const boxesCount = window.currentModalBoxes;
-            const cartKey = `${id}_box_${Date.now()}`;
-
-            cart.push({
-                cartKey,
-                id: p.id,
-                title: `${p.title} (Колір: ${p.color || 'стандарт'}, Ростовка: ${p.boxQty} шт. Серія: ${p.sizes})`,
-                price: p.boxPrice,
-                qty: boxesCount
-            });
-
-            updateCart();
-            closeProductModal();
-            alert(`Додано ростовок: ${boxesCount} шт!`);
-        }
-
-        function closeProductModal() {
-            document.getElementById('productModal').classList.add('hidden');
-        }
-
-        function filterCategory(cat) {
-            if(cat === 'all') renderProducts(products);
-            else renderProducts(products.filter(p => p.category === cat));
-        }
-
-        function updateCart() {
-            localStorage.setItem('cart', JSON.stringify(cart));
-            document.getElementById('cartCount').textContent = cart.reduce((sum, item) => sum + item.qty, 0);
-            
-            const cartItems = document.getElementById('cartItems');
-            if(cart.length === 0) {
-                cartItems.innerHTML = '<p class="text-gray-500 text-center py-8">Кошик порожній</p>';
-            } else {
-                cartItems.innerHTML = cart.map(item => `
-                    <div class="flex items-center justify-between border-b pb-2">
-                        <div>
-                            <div class="font-bold text-sm">${item.title}</div>
-                            <div class="text-xs text-gray-500">${item.price} грн x ${item.qty} ростов(ку/ок)</div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-bold">${item.price * item.qty} грн</span>
-                            <button onclick="removeFromCart('${item.cartKey}')" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('cartTotal').textContent = cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + ' грн';
-        }
-
-        function removeFromCart(cartKey) {
-            cart = cart.filter(c => c.cartKey !== cartKey);
-            updateCart();
-        }
-
-        function checkout() {
-            if(cart.length === 0) return alert('Кошик порожній!');
-            const name = document.getElementById('orderName').value.trim();
-            const phone = document.getElementById('orderPhone').value.trim();
-            const address = document.getElementById('orderAddress').value.trim();
-
-            if(!name || !phone || !address) return alert('Заповніть дані для доставки!');
-
-            orders.unshift({
-                id: Date.now(),
-                date: new Date().toLocaleString('uk-UA'),
-                customer: { name, phone, address },
-                items: [...cart],
-                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0)
-            });
-            localStorage.setItem('orders', JSON.stringify(orders));
-
-            alert('Замовлення успішно оформлено!');
-            cart = [];
-            updateCart();
-            document.getElementById('cartModal').classList.add('hidden');
-        }
-
-        document.getElementById('logo').addEventListener('click', () => {
-            logoClicks++;
-            if(logoClicks === 3) {
-                logoClicks = 0;
-                if(prompt('Введіть пароль адміністратора:') === '7777') {
-                    enterAdmin();
-                } else {
-                    alert('Невірний пароль!');
-                }
-            }
-            setTimeout(() => logoClicks = 0, 1500);
-        });
-
-        function enterAdmin() {
-            isAdminMode = true;
-            document.getElementById('adminTopBar').classList.remove('hidden');
-            document.getElementById('adminStatusText').classList.remove('hidden');
-            renderProducts();
-            alert('Ви увійшли в режим адміністрування!');
-        }
-
-        function exitAdmin() {
-            if (hasUnsavedChanges) {
-                if (confirm('⚠️ УВАГА! Ви додали або змінили товари, але ще НЕ скачали оновлений код для GitHub.\n\nБажаєте скачати новий код зараз?')) {
-                    exportSiteCode();
-                }
-            }
-            isAdminMode = false;
-            document.getElementById('adminTopBar').classList.add('hidden');
-            document.getElementById('adminStatusText').classList.add('hidden');
-            document.getElementById('adminOrdersSection').classList.add('hidden');
-            renderProducts();
-        }
-
-        function switchAdminTab(tab) {
-            const ordSec = document.getElementById('adminOrdersSection');
-            if (tab === 'orders') {
-                ordSec.classList.remove('hidden');
-                renderAdminOrders();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                ordSec.classList.add('hidden');
-            }
-        }
-
-        function renderAdminOrders() {
-            document.getElementById('ordersCountBadge').textContent = orders.length;
-            const list = document.getElementById('adminOrdersList');
-            if(orders.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 text-center py-4">Ще немає замовлень</p>';
-                return;
-            }
-            list.innerHTML = orders.map(ord => `
-                <div class="bg-gray-50 p-4 rounded-xl border space-y-2 text-sm">
-                    <div class="flex justify-between font-bold text-indigo-600">
-                        <span>Замовлення #${ord.id}</span>
-                        <span>${ord.date}</span>
-                    </div>
-                    <div class="border-t pt-1">
-                        <div class="font-semibold">Клієнт: ${ord.customer.name}</div>
-                        <div>Тел: ${ord.customer.phone} | Адреса: ${ord.customer.address}</div>
-                    </div>
-                    <div class="border-t pt-1">
-                        ${ord.items.map(i => `<div class="text-xs text-gray-600">- ${i.title} (${i.qty} ростовок) — ${i.price * i.qty} грн</div>`).join('')}
-                    </div>
-                    <div class="border-t pt-1 flex justify-between font-bold text-gray-800">
-                        <span>Сума:</span>
-                        <span class="text-green-600">${ord.total} грн</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Загрузка до 10 фотографий
-        function handleMultipleImagesUpload(event) {
-            const files = Array.from(event.target.files).slice(0, 10);
-            if (files.length === 0) return;
-
-            loadedProductImages = [];
-            const container = document.getElementById('imagesPreviewContainer');
-            container.innerHTML = '';
-
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64 = e.target.result;
-                    loadedProductImages.push(base64);
-
-                    const imgTag = document.createElement('img');
-                    imgTag.src = base64;
-                    imgTag.className = 'w-16 h-16 object-cover rounded-lg border shadow-sm';
-                    container.appendChild(imgTag);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function openProductFormModal(prodId = null) {
-            document.getElementById('aiInputText').value = '';
-            document.getElementById('imagesPreviewContainer').innerHTML = '';
-            loadedProductImages = [];
-            document.getElementById('productEditForm').reset();
-
-            if (prodId) {
-                const p = products.find(x => x.id === prodId);
-                document.getElementById('productFormTitle').textContent = 'Редагувати товар';
-                document.getElementById('editProdId').value = p.id;
-                document.getElementById('prodTitle').value = p.title;
-                document.getElementById('prodCategory').value = p.category;
-                document.getElementById('prodColor').value = p.color || '';
-                document.getElementById('prodPrice').value = p.price;
-                document.getElementById('prodBoxPrice').value = p.boxPrice;
-                document.getElementById('prodBoxQty').value = p.boxQty;
-                document.getElementById('prodSizes').value = p.sizes;
-                document.getElementById('prodDesc').value = p.desc;
-
-                if (p.images && p.images.length > 0) {
-                    loadedProductImages = [...p.images];
-                    const container = document.getElementById('imagesPreviewContainer');
+const container = document.getElementById('imagesPreviewContainer');
                     loadedProductImages.forEach(img => {
                         const imgTag = document.createElement('img');
                         imgTag.src = img;
@@ -567,6 +10,7 @@
                 document.getElementById('productFormTitle').textContent = 'Додати новий товар';
                 document.getElementById('editProdId').value = '';
             }
+
             document.getElementById('productFormModal').classList.remove('hidden');
         }
 
@@ -574,57 +18,94 @@
             document.getElementById('productFormModal').classList.add('hidden');
         }
 
+        // ИИ-парсер текста (базовая логика извлечения цен, размеров и названий)
+        function parseWithAI() {
+            const text = document.getElementById('aiInputText').value;
+            if (!text.trim()) return alert('Вставте текст постачальника для розбору!');
+
+            // Простая эвристика поиска цен, размеров и строк
+            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length > 0) {
+                document.getElementById('prodTitle').value = lines[0];
+            }
+
+            const fullText = text.toLowerCase();
+            
+            // Ищем цифры цен (грн / грн.)
+            const priceMatch = text.match(/(\d+)\s*(грн|грн\.|uah)/i);
+            if (priceMatch) {
+                const val = parseInt(priceMatch[1]);
+                document.getElementById('prodPrice').value = val;
+                document.getElementById('prodBoxPrice').value = val * 5; // Пример для ростовки по умолчанию
+            }
+
+            // Ищем размеры (S, M, L, XL, 2XL и т.д.)
+            const sizesMatch = text.match(/(s|m|l|xl|xxl|\d{2}[-\s]*\d{2})/i);
+            if (sizesMatch) {
+                document.getElementById('prodSizes').value = text.match(/[sml\d\-\,\s]{3,15}/i)?.[0] || 'S, M, L, XL';
+            }
+
+            document.getElementById('prodBoxQty').value = '5';
+            document.getElementById('prodDesc').value = text;
+            alert('✨ ШІ успішно розібрав текст та заповнив поля!');
+        }
+
+        function saveProduct(event) {
+            event.preventDefault();
+            const idVal = document.getElementById('editProdId').value;
+            
+            const productData = {
+                id: idVal ? parseInt(idVal) : Date.now(),
+                title: document.getElementById('prodTitle').value,
+                category: document.getElementById('prodCategory').value,
+                color: document.getElementById('prodColor').value,
+                price: parseFloat(document.getElementById('prodPrice').value),
+                boxPrice: parseFloat(document.getElementById('prodBoxPrice').value),
+                boxQty: parseInt(document.getElementById('prodBoxQty').value),
+                sizes: document.getElementById('prodSizes').value,
+                desc: document.getElementById('prodDesc').value,
+                images: loadedProductImages.length > 0 ? loadedProductImages : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500']
+            };
+
+            if (idVal) {
+                const index = products.findIndex(p => p.id === productData.id);
+                if (index !== -1) products[index] = productData;
+            } else {
+                products.unshift(productData);
+            }
+
+            hasUnsavedChanges = true;
+            closeProductFormModal();
+            renderProducts();
+            alert('Товар успішно збережено!');
+        }
+
         function editProduct(id) {
             openProductFormModal(id);
         }
 
         function deleteProduct(id) {
-            if(confirm('Видалити цей товар?')) {
+            if (confirm('Ви впевнені, що хочете видалити цей товар?')) {
                 products = products.filter(p => p.id !== id);
                 hasUnsavedChanges = true;
                 renderProducts();
             }
         }
 
-        function saveProduct(e) {
-            e.preventDefault();
-            const id = document.getElementById('editProdId').value;
-            const finalImages = loadedProductImages.length > 0 ? loadedProductImages : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500'];
-
-            const data = {
-                id: id ? Number(id) : Date.now(),
-                title: document.getElementById('prodTitle').value,
-                category: document.getElementById('prodCategory').value,
-                color: document.getElementById('prodColor').value,
-                images: finalImages,
-                price: Number(document.getElementById('prodPrice').value),
-                boxPrice: Number(document.getElementById('prodBoxPrice').value),
-                boxQty: Number(document.getElementById('prodBoxQty').value),
-                sizes: document.getElementById('prodSizes').value,
-                desc: document.getElementById('prodDesc').value
-            };
-
-            if (id) {
-                const index = products.findIndex(p => p.id === Number(id));
-                products[index] = data;
-            } else {
-                products.push(data);
+        // Функция экспорта (скачивания) обновленного кода сайта со всеми товарами
+        function exportSiteCode() {
+            // Получаем актуальный HTML документ, подставляя актуальный массив товаров
+            let fullHtml = document.documentElement.outerHTML;
+            
+            // Автоматически заменяем текущий массив products внутри скрипта на актуальный из памяти
+            const productsScriptRegex = /let products = \[[\s\S]*?\];/;
+            const newProductsCode = `let products = ${JSON.stringify(products, null, 4)};`;
+            
+            if (productsScriptRegex.test(fullHtml)) {
+                fullHtml = fullHtml.replace(productsScriptRegex, newProductsCode);
             }
 
-            hasUnsavedChanges = true;
-            renderProducts();
-            closeProductFormModal();
-            alert('Товар збережено у браузері! Не забудьте натиснути кнопку "Скачати код" у верхній червоній панелі.');
-        }
-
-        function exportSiteCode() {
-            let htmlContent = document.documentElement.outerHTML;
-            const oldProductsString = /let products = \[[\s\S]*?\];/;
-            const newProductsString = `let products = ${JSON.stringify(products, null, 4)};`;
-            
-            htmlContent = htmlContent.replace(oldProductsString, newProductsString);
-
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const blob = new Blob([<!DOCTYPE html>\n + fullHtml], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -635,85 +116,10 @@
             URL.revokeObjectURL(url);
 
             hasUnsavedChanges = false;
-            alert('✅ Файл index.html успішно завантажено! Завантажте його на GitHub.');
+            alert('📥 Код успішно скачано! Замініть ним файл index.html у вашому репозиторії GitHub.');
         }
 
-        // Умный ИИ-парсер текста (с распознаванием цвета)
-        function parseWithAI() {
-            let text = document.getElementById('aiInputText').value;
-            if(!text.trim()) return alert('Будь ласка, введіть текст!');
-
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            let title = lines[0] ? lines[0].replace(/[🔥✨🔹💰]/g, '').trim() : 'Новий товар';
-
-            let price = 250;
-            const priceMatch = text.match(/(\d+)\s*(?:грн|₴)/i);
-            if (priceMatch) price = parseInt(priceMatch[1]);
-
-            let boxQty = 5;
-            const qtyMatch = text.match(/(\d+)\s*(?:од|одиниць|шт|штук)/i);
-            if (qtyMatch) boxQty = parseInt(qtyMatch[1]);
-
-            let boxPrice = price * boxQty;
-
-            // Размеры
-            let sizes = 'S, M, L, XL, 2XL';
-            const sizeMatch = text.match(/(?:розміри?|розмір)[:\s]*([0-9A-ZА-ЯІЄЇ\-\s,\/]+)/i);
-            let rawSizesStr = sizeMatch ? sizeMatch[1].trim() : '';
-
-            if(!rawSizesStr) {
-                const rangeMatch = text.match(/([SMLXLСМХЛ0-9]+\s*-\s*[SMLXLСМХЛ0-92ХL]+)/i);
-                if (rangeMatch) rawSizesStr = rangeMatch[0];
-            }
-
-            if (rawSizesStr) {
-                let clean = rawSizesStr
-                    .replace(/ХЛ/gi, 'XL')
-                    .replace(/ХІ/gi, 'XL')
-                    .replace(/С/g, 'S')
-                    .replace(/М/g, 'M')
-                    .replace(/Л/g, 'L');
-
-                if (clean.includes('S') && clean.includes('2XL')) sizes = 'S, M, L, XL, 2XL';
-                else if (clean.includes('S') && clean.includes('XL')) sizes = 'S, M, L, XL';
-                else sizes = clean;
-            }
-
-            // Цвет из текста
-            const colorMatch = text.match(/(?:колір|цвет)[:\s\-]*([а-яієїa-z\s\/]+)/i);
-            if (colorMatch) {
-                document.getElementById('prodColor').value = colorMatch[1].trim();
-            }
-
-            // Описание
-            const cleanDescLines = lines.filter((l, index) => {
-                const lower = l.toLowerCase();
-                if (index === 0) return false;
-                if (lower.includes('ціна') || lower.includes('грн') || lower.includes('ростовка') || lower.includes('пачка') || lower.includes('розмір')) return false;
-                return true;
-            });
-
-            let cleanDesc = cleanDescLines.join('\n').trim();
-            if (!cleanDesc) cleanDesc = text;
-
-            document.getElementById('prodTitle').value = title;
-            document.getElementById('prodPrice').value = price;
-            document.getElementById('prodBoxPrice').value = boxPrice;
-            document.getElementById('prodBoxQty').value = boxQty;
-            document.getElementById('prodSizes').value = sizes;
-            document.getElementById('prodDesc').value = cleanDesc;
-
-            alert('✨ ШІ успішно розпізнав текст (назву, ціни, розміри та опис)!');
-        }
-
-        document.getElementById('cartBtn').onclick = () => document.getElementById('cartModal').classList.remove('hidden');
-        document.getElementById('closeCart').onclick = () => document.getElementById('cartModal').classList.add('hidden');
-
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            renderProducts(products.filter(p => p.title.toLowerCase().includes(val)));
-        });
-
+        // Инициализация при загрузке
         renderProducts();
         updateCart();
     </script>
