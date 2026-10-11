@@ -138,31 +138,19 @@
     <!-- Модальное окно создания/редактирования товара -->
     <div id="productFormModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[95vh] overflow-y-auto relative">
-            <button onclick="closeProductFormModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            <button onclick="closeProductFormModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
             
             <h3 id="productFormTitle" class="text-xl font-bold text-gray-800 mb-4">Додати новий товар</h3>
 
-            <!-- 1. ИИ Автозаполнение по ТЕКСТУ -->
-            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-3 space-y-2">
+            <!-- ИИ Автозаполнение по ТЕКСТУ -->
+            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 space-y-2">
                 <label class="block text-xs font-bold text-indigo-900 flex items-center space-x-1">
                     <i class="fas fa-robot text-indigo-600"></i>
-                    <span>1. ШІ-аналіз за ТЕКСТОМ постачальника</span>
+                    <span>Розумне автозаповнення за текстом (ШІ)</span>
                 </label>
-                <textarea id="aiInputText" placeholder="Вставте текст постачальника (ціни, розміри, опис)..." rows="3" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
-                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition w-full">
-                    ✨ Розібрати текст постачальника
-                </button>
-            </div>
-
-            <!-- 2. ИИ Генератор описания по ФОТО -->
-            <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl mb-4 space-y-2">
-                <label class="block text-xs font-bold text-purple-900 flex items-center space-x-1">
-                    <i class="fas fa-camera text-purple-600"></i>
-                    <span>2. ШІ-генератор опису та кольору за ФОТО</span>
-                </label>
-                <input type="file" id="aiImageInput" accept="image/*" multiple class="w-full border rounded-lg p-1 text-xs bg-white cursor-pointer">
-                <button type="button" onclick="analyzePhotoWithAI()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition w-full">
-                    📸 Згенерувати опис та колір з фотографій
+                <textarea id="aiInputText" placeholder="Вставте текст постачальника (напр: Жіночі штани... Колір синій. Ростовка 5 од. Розміри S-2XL. Ціна 250 грн)..." rows="3" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
+                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition w-full">
+                    ✨ Розібрати текст автоматично
                 </button>
             </div>
 
@@ -186,12 +174,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Колір (Color)</label>
-                        <input type="text" id="prodColor" placeholder="напр. Чорний / Синій" class="w-full border rounded-lg p-2 text-sm">
+                        <input type="text" id="prodColor" placeholder="напр. Синій / Джинс" class="w-full border rounded-lg p-2 text-sm">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Фотографії товару (до 10 штук)</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Фотографії товару (можна вибрати до 10 штук)</label>
                     <input type="file" id="prodImageFiles" accept="image/*" multiple class="w-full border rounded-lg p-1 text-xs bg-gray-50 cursor-pointer" onchange="handleMultipleImagesUpload(event)">
                     <div id="imagesPreviewContainer" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
@@ -304,7 +292,7 @@
 
             const thumbnailsHtml = imgList.length > 1 ? `
                 <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
-                    ${imgList.map((img, idx) => `
+                    ${imgList.map((img) => `
                         <img src="${img}" onclick="switchModalMainImage('${img}')" class="w-14 h-14 object-cover rounded-lg border-2 border-transparent hover:border-indigo-600 cursor-pointer transition">
                     `).join('')}
                 </div>
@@ -522,7 +510,7 @@
             `).join('');
         }
 
-        // Загрузка ДО 10 фотографий одновременно
+        // Загрузка до 10 фотографий
         function handleMultipleImagesUpload(event) {
             const files = Array.from(event.target.files).slice(0, 10);
             if (files.length === 0) return;
@@ -531,7 +519,6 @@
             const container = document.getElementById('imagesPreviewContainer');
             container.innerHTML = '';
 
-            let loadedCount = 0;
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -542,8 +529,6 @@
                     imgTag.src = base64;
                     imgTag.className = 'w-16 h-16 object-cover rounded-lg border shadow-sm';
                     container.appendChild(imgTag);
-
-                    loadedCount++;
                 };
                 reader.readAsDataURL(file);
             });
@@ -551,7 +536,6 @@
 
         function openProductFormModal(prodId = null) {
             document.getElementById('aiInputText').value = '';
-            document.getElementById('aiImageInput').value = '';
             document.getElementById('imagesPreviewContainer').innerHTML = '';
             loadedProductImages = [];
             document.getElementById('productEditForm').reset();
@@ -654,7 +638,7 @@
             alert('✅ Файл index.html успішно завантажено! Завантажте його на GitHub.');
         }
 
-        // 1. ИИ-парсер ТЕКСТА
+        // Умный ИИ-парсер текста (с распознаванием цвета)
         function parseWithAI() {
             let text = document.getElementById('aiInputText').value;
             if(!text.trim()) return alert('Будь ласка, введіть текст!');
@@ -695,16 +679,17 @@
                 else sizes = clean;
             }
 
-            // Колир
+            // Цвет из текста
             const colorMatch = text.match(/(?:колір|цвет)[:\s\-]*([а-яієїa-z\s\/]+)/i);
             if (colorMatch) {
                 document.getElementById('prodColor').value = colorMatch[1].trim();
             }
 
+            // Описание
             const cleanDescLines = lines.filter((l, index) => {
                 const lower = l.toLowerCase();
                 if (index === 0) return false;
-                if (lower.includes('ціна') || lower.includes('грн') || lower.includes('ростовка') || lower.includes('пачка')) return false;
+                if (lower.includes('ціна') || lower.includes('грн') || lower.includes('ростовка') || lower.includes('пачка') || lower.includes('розмір')) return false;
                 return true;
             });
 
@@ -718,30 +703,7 @@
             document.getElementById('prodSizes').value = sizes;
             document.getElementById('prodDesc').value = cleanDesc;
 
-            alert('✨ ШІ успішно розпізнав текст!');
-        }
-
-        // 2. ИИ-анализ ФОТОГРАФИЙ (генератор красивого описания и определение цвета)
-        function analyzePhotoWithAI() {
-            const input = document.getElementById('aiImageInput');
-            if(!input.files || input.files.length === 0) {
-                return alert('Будь ласка, виберіть хоча б одну фотографію для аналізу!');
-            }
-
-            // Симуляция визионерского ИИ-анализа визуала
-            const colorsList = ['Чорний', 'Синій', 'Білий', 'Бежевий', 'Сірий', 'Червоний', 'Зелений (Хакі)', 'Графіт'];
-            const randomColor = colorsList[Math.floor(Math.random() * colorsList.length)];
-
-            const generatedDesc = `🔥 Стильна та якісна модель сезону!
-🔹 Матеріал: Високоякісна дихаюча тканина, приємна до тіла та стійка до прання.
-🔹 Крій: Ергономічний та сучасний фасон, що чудово сідає по фігурі.
-🔹 Деталі: Надійна фурнітура, акуратні шви, практичний та універсальний дизайн для щоденного носіння.
-🔹 Сезон: Універсальний / Комфорт у будь-яку погоду.`;
-
-            document.getElementById('prodColor').value = randomColor;
-            document.getElementById('prodDesc').value = generatedDesc;
-
-            alert(`📸 ШІ проаналізував фотографії!\n\nВизначено колір: ${randomColor}\nЗгенеровано якісний опис у полі Опис товару.`);
+            alert('✨ ШІ успішно розпізнав текст (назву, ціни, розміри та опис)!');
         }
 
         document.getElementById('cartBtn').onclick = () => document.getElementById('cartModal').classList.remove('hidden');
