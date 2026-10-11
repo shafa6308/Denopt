@@ -31,13 +31,11 @@
     <!-- Основной Хедер магазина -->
     <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <!-- Логотип (3 клика = Вход в админку) -->
             <div id="logo" class="text-2xl font-bold cursor-pointer select-none flex items-center space-x-2">
                 <i class="fas fa-store"></i>
                 <span>MegaStore <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded">Одеса (Опт/Роздріб)</span></span>
             </div>
 
-            <!-- Поиск -->
             <div class="flex-1 max-w-md mx-4 hidden md:block">
                 <div class="relative">
                     <input type="text" id="searchInput" placeholder="Пошук товарів..." 
@@ -46,7 +44,6 @@
                 </div>
             </div>
 
-            <!-- Корзина -->
             <button id="cartBtn" class="relative bg-indigo-700 hover:bg-indigo-800 px-4 py-2 rounded-full transition flex items-center space-x-2">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="font-semibold">Кошик</span>
@@ -58,7 +55,6 @@
     <!-- Главный контент -->
     <main class="container mx-auto px-4 py-6 flex-1">
         
-        <!-- Секция заказов в админке -->
         <div id="adminOrdersSection" class="hidden mb-8 bg-white p-6 rounded-2xl shadow-sm border">
             <h3 class="text-xl font-bold text-gray-800 mb-4">Список замовлень від покупців</h3>
             <div id="adminOrdersList" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
@@ -103,7 +99,7 @@
         </section>
     </main>
 
-    <!-- Модальное окно полной информации о товаре с выбором количества ростовок -->
+    <!-- Модальное окно полной информации о товаре -->
     <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto relative">
             <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
@@ -152,7 +148,7 @@
                     <i class="fas fa-robot text-indigo-600"></i>
                     <span>Розумне автозаповнення тексту (ШІ)</span>
                 </label>
-                <textarea id="aiInputText" placeholder="Вставте текст постачальника (напр: Ростовка 5 од. Розміри S-2XL. Ціна 250 грн)..." rows="3" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
+                <textarea id="aiInputText" placeholder="Вставте текст постачальника (напр: Жіночі теплі штани... Ростовка 5 од. Розміри С-2ХЛ. Ціна 250 грн)..." rows="4" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
                 <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition w-full">
                     ✨ Розібрати текст автоматично
                 </button>
@@ -208,7 +204,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Опис товару</label>
-                    <textarea id="prodDesc" rows="2" required class="w-full border rounded-lg p-2 text-sm"></textarea>
+                    <textarea id="prodDesc" rows="3" required class="w-full border rounded-lg p-2 text-sm"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm transition">
                     Зберегти товар
@@ -222,14 +218,14 @@
         let products = [
             { 
                 id: 1, 
-                title: 'Жіночі зимові шапки з ангори', 
+                title: 'Жіночі теплі штани з утеплювачем з велюру Adidas', 
                 category: 'women', 
-                price: 150, 
-                boxPrice: 1500, 
-                boxQty: 10, 
+                price: 250, 
+                boxPrice: 1250, 
+                boxQty: 5, 
                 sizes: 'S, M, L, XL, 2XL', 
-                desc: 'Дуже теплі, м’якенькі та приємні до тіла. Флісова підкладка захищає від вітру.', 
-                img: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500' 
+                desc: 'Матеріал: Верх – бавовняна суміш, внутрішній шар – велюр.\nЗручні кишені на блискавках, еластичний пояс із регульованим шнурком.\nКолір - Сині.\nМ\'який велюр усередині, ідеальний для холодної погоди.', 
+                img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500' 
             }
         ];
 
@@ -237,6 +233,7 @@
         let orders = JSON.parse(localStorage.getItem('orders')) || [];
         let logoClicks = 0;
         let isAdminMode = false;
+        let hasUnsavedChanges = false; // Флаг несохраненных изменений
 
         function renderProducts(items = products) {
             const grid = document.getElementById('productsGrid');
@@ -269,7 +266,6 @@
             openProductModal(id);
         }
 
-        // Модальное окно с выбором количества ростовок (+/-)
         function openProductModal(id) {
             const p = products.find(prod => prod.id === id);
             if (!p) return;
@@ -300,7 +296,6 @@
                                         <div class="text-lg font-bold text-emerald-700">${p.boxPrice} грн</div>
                                         <div class="text-xs text-emerald-800">Ціна за 1 ростовку (${p.boxQty} шт)</div>
                                     </div>
-                                    <!-- Кнопки плюс/минус количества ростовок -->
                                     <div class="flex items-center space-x-2 bg-white border border-emerald-300 rounded-xl px-2 py-1 shadow-sm">
                                         <button onclick="changeModalQty(-1)" class="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold text-gray-700 transition flex items-center justify-center">-</button>
                                         <span id="modalBoxQtyCount" class="font-bold text-lg w-8 text-center">1</span>
@@ -331,7 +326,7 @@
         function addBoxToCart(id) {
             const p = products.find(prod => prod.id === id);
             const boxesCount = window.currentModalBoxes;
-            const cartKey = `${id}_box_${Date.now()}`; // уникальный ключ для каждой позиции в кошике
+            const cartKey = `${id}_box_${Date.now()}`;
 
             cart.push({
                 cartKey,
@@ -428,7 +423,13 @@
             alert('Ви увійшли в режим адміністрування!');
         }
 
+        // Защита при выходе из админки
         function exitAdmin() {
+            if (hasUnsavedChanges) {
+                if (confirm('⚠️ УВАГА! Ви додали або змінили товари, але ще НЕ скачали оновлений код для GitHub.\n\nБажаєте скачати новий код зараз, щоб зміни збереглися?')) {
+                    exportSiteCode();
+                }
+            }
             isAdminMode = false;
             document.getElementById('adminTopBar').classList.add('hidden');
             document.getElementById('adminStatusText').classList.add('hidden');
@@ -528,6 +529,7 @@
         function deleteProduct(id) {
             if(confirm('Видалити цей товар?')) {
                 products = products.filter(p => p.id !== id);
+                hasUnsavedChanges = true;
                 renderProducts();
             }
         }
@@ -554,9 +556,10 @@
                 products.push(data);
             }
 
+            hasUnsavedChanges = true; // Фиксируем, что есть несохраненные изменения
             renderProducts();
             closeProductFormModal();
-            alert('Товар збережено! Не забудьте натиснути кнопку "Скачати код" у верхній червоній панелі, щоб оновити файл на GitHub.');
+            alert('Товар збережено у браузері! Не забудьте натиснути кнопку "Скачати код" у верхній червоній панелі, щоб оновити файл для GitHub.');
         }
 
         function exportSiteCode() {
@@ -576,42 +579,43 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            hasUnsavedChanges = false; // Сбрасываем флаг, так как код успешно скачан
             alert('✅ Файл index.html успішно завантажено! Завантажте його на GitHub у свій репозиторій.');
         }
 
-        // Продвинутый ИИ-парсер с автоформатированием размеров в S, M, L, XL, 2XL
+        // Полностью переработанный умный ИИ-парсер
         function parseWithAI() {
             let text = document.getElementById('aiInputText').value;
             if(!text.trim()) return alert('Будь ласка, введіть текст!');
 
-            const lines = text.split('\n').filter(l => l.trim().length > 0);
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            
+            // 1. НАЗВАНИЕ: берем первую непустую строку (без смайликов)
             let title = lines[0] ? lines[0].replace(/[🔥✨🔹💰]/g, '').trim() : 'Новий товар';
-            if(title.length > 40) title = 'Стильна модель одягу';
 
-            // Цена за 1 шт
+            // 2. ЦЕНА: ищем цену за 1 шт (число перед "грн")
             let price = 250;
             const priceMatch = text.match(/(\d+)\s*(?:грн|₴)/i);
             if (priceMatch) price = parseInt(priceMatch[1]);
 
-            // Количество штук в ростовке
+            // 3. КОЛИЧЕСТВО В РОСТОВКЕ: ищем "5 од", "5 шт" и т.д.
             let boxQty = 5;
             const qtyMatch = text.match(/(\d+)\s*(?:од|одиниць|шт|штук)/i);
             if (qtyMatch) boxQty = parseInt(qtyMatch[1]);
 
             let boxPrice = price * boxQty;
 
-            // Умная обработка размеров (перевод кириллицы в латиницу и разворачивание диапазонов)
+            // 4. РАЗМЕРЫ: распознаем "С-2ХЛ", переводим в S, M, L, XL, 2XL
             let sizes = 'S, M, L, XL, 2XL';
             const sizeMatch = text.match(/(?:розміри?|розмір)[:\s]*([0-9A-ZА-ЯІЄЇ\-\s,\/]+)/i);
-            
             let rawSizesStr = sizeMatch ? sizeMatch[1].trim() : '';
+
             if(!rawSizesStr) {
                 const rangeMatch = text.match(/([SMLXLСМХЛ0-9]+\s*-\s*[SMLXLСМХЛ0-92ХL]+)/i);
                 if (rangeMatch) rawSizesStr = rangeMatch[0];
             }
 
             if (rawSizesStr) {
-                // Если диапазон содержит С-2ХЛ или S-2XL, превратим в красивый стандарт
                 let clean = rawSizesStr
                     .replace(/ХЛ/gi, 'XL')
                     .replace(/ХІ/gi, 'XL')
@@ -628,14 +632,27 @@
                 }
             }
 
+            // 5. ОПИСАНИЕ: удаляем строки с ценами, ростовками и технической информацией
+            const cleanDescLines = lines.filter((l, index) => {
+                const lower = l.toLowerCase();
+                // Пропускаем первую строку (так как это название) и строки с ценами/ростовками
+                if (index === 0) return false;
+                if (lower.includes('ціна') || lower.includes('грн') || lower.includes('ростовка') || lower.includes('пачка')) return false;
+                return true;
+            });
+
+            let cleanDesc = cleanDescLines.join('\n').trim();
+            if (!cleanDesc) cleanDesc = text; // Если ничего не осталось, оставляем весь текст
+
+            // Автоматически заполняем форму
             document.getElementById('prodTitle').value = title;
             document.getElementById('prodPrice').value = price;
             document.getElementById('prodBoxPrice').value = boxPrice;
             document.getElementById('prodBoxQty').value = boxQty;
             document.getElementById('prodSizes').value = sizes;
-            document.getElementById('prodDesc').value = text;
+            document.getElementById('prodDesc').value = cleanDesc;
 
-            alert('✨ ШІ успішно розпізнав текст та сформував розміри у стандартний формат (S, M, L, XL, 2XL)!');
+            alert('✨ ШІ успішно розпізнав текст! Назву та опис сформовано ідеально.');
         }
 
         document.getElementById('cartBtn').onclick = () => document.getElementById('cartModal').classList.remove('hidden');
