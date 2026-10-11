@@ -11,11 +11,11 @@
     <style>
         .category-card:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
         .product-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
-        .full-image {
+        /* Стиль для показу фото повністю у початкових пропорціях без обрізання */
+        .full-image-preview {
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
-            width: 100%;
-            height: 100%;
-            background-color: #f3f4f6;
         }
     </style>
 </head>
@@ -72,9 +72,9 @@
             
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Завантажені фотографії товару:</label>
-                <!-- Контейнер, куди динамічно додаватимуться фото -->
+                <!-- Контейнер для фотографій з можливістю видалення -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-4" id="photo-preview-container">
-                    <!-- Сюди завантажуються картинки -->
+                    <!-- Сюди динамічно додаватимуться завантажені фото -->
                 </div>
             </div>
 
@@ -119,7 +119,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript для роботи із завантаженням та видаленням фоток без обрізання -->
+    <!-- СКРИПТ: Завантаження та видалення фото без обрізання -->
     <script>
         const uploadInput = document.getElementById('photo-upload-input');
         const previewContainer = document.getElementById('photo-preview-container');
@@ -132,20 +132,22 @@
 
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Створюємо блок для кожної фотографії
+                    // Зовнішній блок для фото
                     const wrapper = document.createElement('div');
-                    wrapper.className = 'relative h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200';
+                    wrapper.className = 'relative h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center p-1';
 
+                    // Зображення зберігає свої пропорції та показується повністю
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.className = 'full-image'; // Показує фото повністю без обрізання
+                    img.className = 'full-image-preview';
 
+                    // Кнопка видалення (хрестик)
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow hover:bg-red-700 transition';
+                    deleteBtn.className = 'absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow hover:bg-red-700 transition cursor-pointer';
                     deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
                     deleteBtn.title = 'Видалити фото';
                     
-                    // Подія натискання на хрестик для видалення конкретної фотографії
+                    // Подія видалення конкретного фото при натисканні на хрестик
                     deleteBtn.onclick = function() {
                         wrapper.remove();
                     };
@@ -156,7 +158,7 @@
                 }
                 reader.readAsDataURL(file);
             }
-            // Очищуємо інпут, щоб можна було завантажити той самий файл повторно, якщо потрібно
+            // Очищуємо інпут, щоб можна було завантажити той самий файл повторно
             uploadInput.value = '';
         });
     </script>
