@@ -11,6 +11,13 @@
     <style>
         .category-card:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
         .product-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
+        /* Показ фотографій повністю без обрізання */
+        .full-image {
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            background-color: #f3f4f6;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
@@ -57,9 +64,38 @@
         <section class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white p-8 md:p-12 mb-8 shadow-xl">
             <div class="max-w-2xl">
                 <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-4">Склад-магазин в Одесі</span>
-                <h1 class="text-3xl md:text-4xl font-extxl font-bold mb-4">Товари оптом та в роздріб за найкращими цінами</h1>
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">Товари оптом та в роздріб за найкращими цінами</h1>
                 <p class="text-indigo-100 mb-6 text-sm md:text-base">Широкий асортимент продукції, швидка доставка по Одесі та всій Україні, вигідні умови для партнерів.</p>
                 <button class="bg-white text-indigo-600 font-bold px-6 py-3 rounded-xl shadow-md hover:bg-indigo-50 transition">Перейти до каталогу</button>
+            </div>
+        </section>
+
+        <!-- Панель адміністратора: керування фото з можливістю їх видалення (хрестик) -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-gear mr-2"></i>Панель керування товарами</h2>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Завантажені фотографії товару:</label>
+                <!-- Контейнер для фотографій -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4" id="photo-container">
+                    <!-- Фото 1 -->
+                    <div class="relative h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        <img src="https://via.placeholder.com/300x200" alt="Фото товару" class="full-image">
+                        <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow hover:bg-red-700 transition" title="Видалити фото">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <!-- Фото 2 -->
+                    <div class="relative h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        <img src="https://via.placeholder.com/200x400" alt="Фото товару" class="full-image">
+                        <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow hover:bg-red-700 transition" title="Видалити фото">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Додати нові фотографії:</label>
+                <input type="file" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
             </div>
         </section>
 
