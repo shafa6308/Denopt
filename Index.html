@@ -115,30 +115,36 @@
         </div>
     </div>
 
-    <!-- Панель администратора -->
+    <!-- Панель администратора (увеличенное окно для удобного просмотра карточек) -->
     <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Панель керування (Адмінка)</h3>
                 <button id="closeAdmin" class="text-gray-500 text-2xl">&times;</button>
             </div>
 
             <!-- Вкладки админки -->
-            <div class="flex border-b mb-4 justify-between items-center">
+            <div class="flex border-b mb-4 justify-between items-center pb-2 flex-wrap gap-2">
                 <div class="flex">
-                    <button onclick="switchAdminTab('products')" id="tabProductsBtn" class="py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600">Товари</button>
-                    <button onclick="switchAdminTab('orders')" id="tabOrdersBtn" class="py-2 px-4 font-bold text-gray-500">Замовлення (<span id="ordersCountBadge">0</span>)</button>
+                    <button onclick="switchAdminTab('products')" id="tabProductsBtn" class="py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600 text-sm">Товари</button>
+                    <button onclick="switchAdminTab('orders')" id="tabOrdersBtn" class="py-2 px-4 font-bold text-gray-500 text-sm">Замовлення (<span id="ordersCountBadge">0</span>)</button>
                 </div>
-                <button onclick="openProductFormModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center space-x-1 shadow">
-                    <i class="fas fa-plus"></i>
-                    <span>Додати товар</span>
-                </button>
+                <div class="flex space-x-2">
+                    <button onclick="exportSiteCode()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 shadow">
+                        <i class="fas fa-download"></i>
+                        <span>💾 Скачати оновлений код сайту</span>
+                    </button>
+                    <button onclick="openProductFormModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 shadow">
+                        <i class="fas fa-plus"></i>
+                        <span>Додати товар</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Секция 1: Список товаров -->
+            <!-- Секция 1: Список товаров в виде карточек -->
             <div id="adminProductsSection" class="space-y-4">
                 <h4 class="font-bold text-gray-700">Керування товарами в каталозі</h4>
-                <div id="adminProductsList" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
+                <div id="adminProductsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-1"></div>
             </div>
 
             <!-- Секция 2: Заказы -->
@@ -149,7 +155,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно создания/редактирования товара с улучшенным ШІ -->
+    <!-- Модальное окно создания/редактирования товара -->
     <div id="productFormModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[95vh] overflow-y-auto relative">
             <button onclick="closeProductFormModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
@@ -160,16 +166,18 @@
             <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 space-y-2">
                 <label class="block text-xs font-bold text-indigo-900 flex items-center space-x-1">
                     <i class="fas fa-robot text-indigo-600"></i>
-                    <span>Розумне автозаповнення тексту від постачальника (ШІ)</span>
+                    <span>Розумне автозаповнення тексту (ШІ)</span>
                 </label>
-                <textarea id="aiInputText" placeholder="Вставте сюди текст постачальника (назву, опис, ціни, розміри)..." rows="3" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
-                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition w-full">
-                    ✨ Розібрати текст точно і заповнити поля
+                <textarea id="aiInputText" placeholder="Вставте текст постачальника (назву, опис, ціни)..." rows="2" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
+                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition w-full">
+                    ✨ Розібрати текст автоматично
                 </button>
             </div>
 
             <form id="productEditForm" class="space-y-3" onsubmit="saveProduct(event)">
                 <input type="hidden" id="editProdId">
+                <input type="hidden" id="prodImg">
+                
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару</label>
                     <input type="text" id="prodTitle" required class="w-full border rounded-lg p-2 text-sm">
@@ -185,10 +193,16 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Посилання на фото (URL)</label>
-                        <input type="url" id="prodImg" required class="w-full border rounded-lg p-2 text-sm" placeholder="https://...">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Фото з пристрою (ПК / Телефон)</label>
+                        <input type="file" id="prodImageFile" accept="image/*" class="w-full border rounded-lg p-1 text-xs bg-gray-50 cursor-pointer" onchange="handleImageUpload(event)">
                     </div>
                 </div>
+                
+                <!-- Превью картинки -->
+                <div id="imagePreviewContainer" class="hidden">
+                    <img id="imagePreview" src="" class="w-20 h-20 object-cover rounded-lg border">
+                </div>
+
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за 1 шт (грн)</label>
@@ -211,7 +225,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Опис товару</label>
-                    <textarea id="prodDesc" rows="3" required class="w-full border rounded-lg p-2 text-sm"></textarea>
+                    <textarea id="prodDesc" rows="2" required class="w-full border rounded-lg p-2 text-sm"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm transition">
                     Зберегти товар
@@ -222,21 +236,20 @@
 
     <!-- Скрипт логики -->
     <script>
-        const initialProducts = [
+        let products = [
             { 
                 id: 1, 
-                title: 'Куртка демісезонна', 
-                category: 'men', 
-                price: 4500, 
-                boxPrice: 15000, 
-                boxQty: 4, 
-                sizes: 'M (48), L (50), XL (52), XXL (54)', 
-                desc: 'Стильна демісезонна куртка високої якості.', 
-                img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=500' 
+                title: 'Жіночі зимові шапки з ангори', 
+                category: 'women', 
+                price: 150, 
+                boxPrice: 1500, 
+                boxQty: 10, 
+                sizes: '56-58', 
+                desc: 'Дуже теплі, м’якенькі та приємні до тіла. Флісова підкладка захищає від вітру.', 
+                img: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500' 
             }
         ];
 
-        let products = JSON.parse(localStorage.getItem('products')) || initialProducts;
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         let orders = JSON.parse(localStorage.getItem('orders')) || [];
         let logoClicks = 0;
@@ -402,32 +415,32 @@
             const ordSec = document.getElementById('adminOrdersSection');
 
             if(tab === 'products') {
-                prodBtn.className = 'py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600';
-                ordBtn.className = 'py-2 px-4 font-bold text-gray-500';
+                prodBtn.className = 'py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600 text-sm';
+                ordBtn.className = 'py-2 px-4 font-bold text-gray-500 text-sm';
                 prodSec.classList.remove('hidden');
                 ordSec.classList.add('hidden');
             } else {
-                ordBtn.className = 'py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600';
-                prodBtn.className = 'py-2 px-4 font-bold text-gray-500';
-                ordSec.classList.add('hidden');
-                prodSec.classList.remove('hidden');
+                ordBtn.className = 'py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600 text-sm';
+                prodBtn.className = 'py-2 px-4 font-bold text-gray-500 text-sm';
+                ordSec.classList.remove('hidden');
+                prodSec.classList.add('hidden');
             }
         }
 
+        // Отрисовка товаров в админке в виде красивых карточек
         function renderAdminProducts() {
             const list = document.getElementById('adminProductsList');
             list.innerHTML = products.map(p => `
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border text-sm">
-                    <div class="flex items-center space-x-3 flex-1 truncate">
-                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-lg">
-                        <div class="truncate">
-                            <div class="font-bold">${p.title}</div>
-                            <div class="text-xs text-gray-500">Шт: ${p.price}грн | Ростовка: ${p.boxPrice}грн (${p.boxQty}шт)</div>
-                        </div>
+                <div class="bg-white rounded-2xl border p-3 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-2">
+                        <div class="font-bold text-sm text-gray-800 line-clamp-1">${p.title}</div>
+                        <div class="text-xs text-gray-500 mb-1">Шт: <span class="font-bold text-indigo-600">${p.price} грн</span></div>
+                        <div class="text-xs text-gray-500 mb-3">Ростовка: <span class="font-bold text-emerald-600">${p.boxPrice} грн</span> (${p.boxQty} шт)</div>
                     </div>
-                    <div class="flex space-x-2">
-                        <button onclick="editProduct(${p.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">Редагувати</button>
-                        <button onclick="deleteProduct(${p.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">Видалити</button>
+                    <div class="flex space-x-2 pt-2 border-t">
+                        <button onclick="editProduct(${p.id})" class="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white py-1.5 rounded-lg text-xs font-bold transition text-center">Редагувати</button>
+                        <button onclick="deleteProduct(${p.id})" class="flex-1 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white py-1.5 rounded-lg text-xs font-bold transition text-center">Видалити</button>
                     </div>
                 </div>
             `).join('');
@@ -461,8 +474,24 @@
             `).join('');
         }
 
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Img = e.target.result;
+                document.getElementById('prodImg').value = base64Img;
+                document.getElementById('imagePreview').src = base64Img;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
         function openProductFormModal(prodId = null) {
             document.getElementById('aiInputText').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('productEditForm').reset();
+
             if (prodId) {
                 const p = products.find(x => x.id === prodId);
                 document.getElementById('productFormTitle').textContent = 'Редагувати товар';
@@ -475,9 +504,13 @@
                 document.getElementById('prodBoxQty').value = p.boxQty;
                 document.getElementById('prodSizes').value = p.sizes;
                 document.getElementById('prodDesc').value = p.desc;
+
+                if(p.img) {
+                    document.getElementById('imagePreview').src = p.img;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                }
             } else {
                 document.getElementById('productFormTitle').textContent = 'Додати новий товар';
-                document.getElementById('productEditForm').reset();
                 document.getElementById('editProdId').value = '';
             }
             document.getElementById('productFormModal').classList.remove('hidden');
@@ -494,7 +527,6 @@
         function deleteProduct(id) {
             if(confirm('Видалити цей товар?')) {
                 products = products.filter(p => p.id !== id);
-                localStorage.setItem('products', JSON.stringify(products));
                 renderProducts();
                 renderAdminProducts();
             }
@@ -507,7 +539,7 @@
                 id: id ? Number(id) : Date.now(),
                 title: document.getElementById('prodTitle').value,
                 category: document.getElementById('prodCategory').value,
-                img: document.getElementById('prodImg').value,
+                img: document.getElementById('prodImg').value || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
                 price: Number(document.getElementById('prodPrice').value),
                 boxPrice: Number(document.getElementById('prodBoxPrice').value),
                 boxQty: Number(document.getElementById('prodBoxQty').value),
@@ -522,24 +554,39 @@
                 products.push(data);
             }
 
-            localStorage.setItem('products', JSON.stringify(products));
             renderProducts();
             renderAdminProducts();
             closeProductFormModal();
-            alert('Товар успішно збережено!');
+            alert('Товар збережено! Не забудьте натиснути кнопку "Скачати оновлений код сайту" в адмінці, щоб зберегти зміни на GitHub.');
         }
 
-        // Улучшенный интеллектуальный разбор текста (ШІ)
+        function exportSiteCode() {
+            let htmlContent = document.documentElement.outerHTML;
+            const oldProductsString = /let products = \[[\s\S]*?\];/;
+            const newProductsString = `let products = ${JSON.stringify(products, null, 4)};`;
+            
+            htmlContent = htmlContent.replace(oldProductsString, newProductsString);
+
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Файл index.html успішно завантажено! Завантажте його на GitHub у свій репозиторій.');
+        }
+
         function parseWithAI() {
             const text = document.getElementById('aiInputText').value;
-            if(!text.trim()) return alert('Будь ласка, введіть текст для аналізу!');
+            if(!text.trim()) return alert('Будь ласка, введіть текст!');
 
             const lines = text.split('\n').filter(l => l.trim().length > 0);
-            
-            // 1. Название — первая непустая строка (без эмодзи)
             let title = lines[0] ? lines[0].replace(/[🔥✨🔹💰]/g, '').trim() : 'Товар';
 
-            // 2. Поиск цен с помощью регулярных выражений (ищем числа перед "грн")
             let prices = [];
             const priceMatches = text.match(/(\d+)\s*(?:грн|₴)/gi);
             if (priceMatches) {
@@ -549,32 +596,25 @@
             let price = prices[0] || 150;
             let boxPrice = prices[1] || (price * 10);
 
-            // 3. Поиск количества в упаковке (ищем цифру перед "шт")
             let boxQty = 10;
             const qtyMatch = text.match(/(\d+)\s*шт/i);
-            if (qtyMatch) {
-                boxQty = parseInt(qtyMatch[1]);
-            }
+            if (qtyMatch) boxQty = parseInt(qtyMatch[1]);
 
-            // 4. Поиск размера
             let sizes = 'Універсальний';
             const sizeMatch = text.match(/розмір[а-х]?[:\s]*([0-9\-\s,а-яієї]+)/i);
             if (sizeMatch) {
                 sizes = sizeMatch[1].trim();
             } else {
-                // Ищем диапазон цифр типа 56-58
                 const digitRange = text.match(/\b\d{2}\s*-\s*\d{2}\b/);
                 if (digitRange) sizes = digitRange[0];
             }
 
-            // 5. Формирование чистого описания (без строк с ценами, чтобы не дублировать)
             const cleanDescLines = lines.filter(l => {
                 const lower = l.toLowerCase();
                 return !lower.includes('грн') && !lower.includes('ціна') && !lower.includes('пачка');
             });
             const cleanDesc = cleanDescLines.slice(1).join('\n').trim() || text;
 
-            // Заполняем поля формы
             document.getElementById('prodTitle').value = title;
             document.getElementById('prodPrice').value = price;
             document.getElementById('prodBoxPrice').value = boxPrice;
@@ -582,7 +622,7 @@
             document.getElementById('prodSizes').value = sizes;
             document.getElementById('prodDesc').value = cleanDesc;
 
-            alert('✨ ШІ успішно розпізнав текст! Перевірте заповнені поля.');
+            alert('✨ ШІ успішно розпізнав текст!');
         }
 
         document.getElementById('cartBtn').onclick = () => document.getElementById('cartModal').classList.remove('hidden');
