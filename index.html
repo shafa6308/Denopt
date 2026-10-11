@@ -11,7 +11,6 @@
     <style>
         .category-card:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
         .product-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
-        /* Стиль для показу фото повністю у початкових пропорціях без обрізання */
         .full-image-preview {
             max-width: 100%;
             max-height: 100%;
@@ -24,7 +23,8 @@
     <!-- Верхня панель / Шапка -->
     <header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
+            <!-- Логотип із захищеним потрійним кліком для входу в адмінку -->
+            <div id="admin-trigger" class="flex items-center space-x-2 cursor-pointer select-none" title="Натисніть 3 рази для входу в адмін-панель">
                 <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-xl">
                     <i class="fa-solid fa-store"></i>
                 </div>
@@ -46,10 +46,6 @@
                     <span class="block text-gray-500">Замовлення та консультації:</span>
                     <a href="tel:+380480000000" class="font-bold text-indigo-600 hover:text-indigo-800">+38 (048) 000-00-00</a>
                 </div>
-                <!-- Кнопка відкриття адмін-панелі -->
-                <button onclick="toggleAdminPanel()" title="Панель адміністратора" class="bg-gray-100 text-gray-600 p-2.5 rounded-full hover:bg-gray-200 transition">
-                    <i class="fa-solid fa-gear text-lg"></i>
-                </button>
                 <button class="relative bg-indigo-50 text-indigo-600 p-2.5 rounded-full hover:bg-indigo-100 transition">
                     <i class="fa-solid fa-cart-shopping text-lg"></i>
                     <span class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
@@ -70,24 +66,11 @@
             </div>
         </section>
 
-        <!-- ПАНЕЛЬ АДМІНІСТРАТОРА (Прихована за замовчуванням, відкривається по кнопці шестірні) -->
-        <section id="admin-panel" class="hidden bg-white p-6 rounded-xl shadow-sm border border-indigo-100 mb-8 transition-all">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-900"><i class="fa-solid fa-gear text-indigo-600 mr-2"></i>Панель керування товарами (Адмінка)</h2>
-                <button onclick="toggleAdminPanel()" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Завантажені фотографії товару:</label>
-                <!-- Контейнер для фотографій з можливістю видалення -->
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4" id="photo-preview-container">
-                    <!-- Сюди динамічно додаватимуться завантажені фото -->
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Додати нові фотографії:</label>
-                <input type="file" id="photo-upload-input" multiple accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+        <!-- Каталог товарів (відображається для покупців) -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Каталог оптових товарів</h2>
+            <div id="product-catalog" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Сюди автоматично додаватимуться товари з адмінки -->
             </div>
         </section>
 
@@ -119,6 +102,59 @@
         </section>
     </main>
 
+    <!-- МОДАЛЬНЕ ВІКНО АДМІН-ПАНЕЛІ (Приховане за замовчуванням) -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <!-- Шапка модалки -->
+            <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-bold"><i class="fa-solid fa-gears mr-2"></i>Адмін-панель: Керування товарами</h3>
+                <button onclick="closeAdminModal()" class="text-indigo-200 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- Тіло модалки -->
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- Форма додавання/редагування товару -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h4 id="form-title" class="font-bold text-gray-800 mb-3">Додати новий товар</h4>
+                    <input type="hidden" id="edit-product-id">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару:</label>
+                            <input type="text" id="prod-name" class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:border-indigo-500" placeholder="Введіть назву...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна (опт):</label>
+                            <input type="text" id="prod-price" class="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:border-indigo-500" placeholder="Наприклад: 150 грн">
+                        </div>
+                    </div>
+
+                    <!-- Фотографії та їх прев'ю з хрестиком -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Фотографії товару:</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2" id="admin-photo-preview">
+                            <!-- Динамічні фото з кнопкою видалення -->
+                        </div>
+                        <input type="file" id="prod-photos-input" multiple accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button onclick="saveProduct()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">Зберегти товар</button>
+                        <button onclick="resetForm()" class="bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition">Скасувати</button>
+                    </div>
+                </div>
+
+                <!-- Список існуючих товарів в адмінці -->
+                <div>
+                    <h4 class="font-bold text-gray-800 mb-3">Список товарів</h4>
+                    <div id="admin-products-list" class="space-y-2">
+                        <!-- Список товарів підтягуватиметься сюди -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Підвал сайту -->
     <footer class="bg-gray-800 text-white py-8 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm text-gray-400">
@@ -128,48 +164,221 @@
 
     <!-- СКРИПТИ -->
     <script>
-        // Перемикач відображення панелі адміністратора
-        function toggleAdminPanel() {
-            const panel = document.getElementById('admin-panel');
-            panel.classList.toggle('hidden');
+        // Захищений вхід в адмін-панель за 3 кліки на логотип + пін-код 4777
+        let clickCount = 0;
+        let clickTimer = null;
+
+        document.getElementById('admin-trigger').addEventListener('click', function() {
+            clickCount++;
+            clearTimeout(clickTimer);
+            
+            if (clickCount === 3) {
+                clickCount = 0;
+                const pin = prompt("Введіть пін-код адміністратора:");
+                if (pin === "4777") {
+                    openAdminModal();
+                } else if (pin !== null) {
+                    alert("Невірний пін-код!");
+                }
+            } else {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 600);
+            }
+        });
+
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            renderAdminProducts();
         }
 
-        // Завантаження та видалення фото без обрізання
-        const uploadInput = document.getElementById('photo-upload-input');
-        const previewContainer = document.getElementById('photo-preview-container');
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+            resetForm();
+        }
 
-        uploadInput.addEventListener('change', function(event) {
-            const files = event.target.files;
+        // Локальна база даних товарів (зберігається в пам'яті браузера)
+        let products = JSON.parse(localStorage.getItem('megastore_products')) || [];
+        let currentPhotos = [];
+
+        // Завантаження фото в адмінці з можливістю видалення (хрестик)
+        const photoInput = document.getElementById('prod-photos-input');
+        const photoPreview = document.getElementById('admin-photo-preview');
+
+        photoInput.addEventListener('change', function(e) {
+            const files = e.target.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 if (!file.type.startsWith('image/')) continue;
 
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'relative h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center p-1';
-
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'full-image-preview';
-
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow hover:bg-red-700 transition cursor-pointer';
-                    deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                    deleteBtn.title = 'Видалити фото';
-                    
-                    deleteBtn.onclick = function() {
-                        wrapper.remove();
-                    };
-
-                    wrapper.appendChild(img);
-                    wrapper.appendChild(deleteBtn);
-                    previewContainer.appendChild(wrapper);
+                reader.onload = function(event) {
+                    currentPhotos.push(event.target.result);
+                    renderPhotoPreviews();
                 }
                 reader.readAsDataURL(file);
             }
-            uploadInput.value = '';
+            photoInput.value = '';
         });
+
+        function renderPhotoPreviews() {
+            photoPreview.innerHTML = '';
+            currentPhotos.forEach((src, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative h-20 bg-gray-100 rounded-lg overflow-hidden border flex items-center justify-center p-1';
+
+                const img = document.createElement('img');
+                img.src = src;
+                img.className = 'full-image-preview';
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700 transition cursor-pointer';
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.onclick = function() {
+                    currentPhotos.splice(index, 1);
+                    renderPhotoPreviews();
+                };
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(delBtn);
+                photoPreview.appendChild(wrapper);
+            });
+        }
+
+        // Збереження товару (додавання або редагування)
+        function saveProduct() {
+            const id = document.getElementById('edit-product-id').value;
+            const name = document.getElementById('prod-name').value.trim();
+            const price = document.getElementById('prod-price').value.trim();
+
+            if (!name || !price) {
+                alert("Будь ласка, заповніть назву та ціну товару!");
+                return;
+            }
+
+            if (currentPhotos.length === 0) {
+                alert("Додайте хоча б одне фото товару!");
+                return;
+            }
+
+            if (id) {
+                // Редагування існуючого
+                const prod = products.find(p => p.id == id);
+                if (prod) {
+                    prod.name = name;
+                    prod.price = price;
+                    prod.photos = [...currentPhotos];
+                }
+            } else {
+                // Створення нового
+                const newProd = {
+                    id: Date.now(),
+                    name: name,
+                    price: price,
+                    photos: [...currentPhotos]
+                };
+                products.push(newProd);
+            }
+
+            localStorage.setItem('megastore_products', JSON.stringify(products));
+            resetForm();
+            renderAdminProducts();
+            renderCatalog();
+        }
+
+        function resetForm() {
+            document.getElementById('edit-product-id').value = '';
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('form-title').innerText = 'Додати новий товар';
+            currentPhotos = [];
+            renderPhotoPreviews();
+        }
+
+        // Відображення списку товарів в адмінці
+        function renderAdminProducts() {
+            const listContainer = document.getElementById('admin-products-list');
+            listContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                listContainer.innerHTML = '<p class="text-sm text-gray-500">Ще немає доданих товарів.</p>';
+                return;
+            }
+
+            products.forEach(prod => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-xl border';
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-white rounded-lg border flex items-center justify-center overflow-hidden">
+                            ${prod.photos.length > 0 ? `<img src="${prod.photos[0]}" class="full-image-preview">` : '<i class="fa-solid fa-image text-gray-300"></i>'}
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-sm text-gray-800">${prod.name}</h5>
+                            <span class="text-xs text-indigo-600 font-semibold">${prod.price}</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editProduct(${prod.id})" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-100 transition"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteProduct(${prod.id})" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function editProduct(id) {
+            const prod = products.find(p => p.id == id);
+            if (!prod) return;
+
+            document.getElementById('edit-product-id').value = prod.id;
+            document.getElementById('prod-name').value = prod.name;
+            document.getElementById('prod-price').value = prod.price;
+            document.getElementById('form-title').innerText = 'Редагувати товар';
+            currentPhotos = [...prod.photos];
+            renderPhotoPreviews();
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Ви дійсно хочете видалити цей товар?")) {
+                products = products.filter(p => p.id != id);
+                localStorage.setItem('megastore_products', JSON.stringify(products));
+                renderAdminProducts();
+                renderCatalog();
+            }
+        }
+
+        // Виведення каталогу товарів на головну сторінку для покупців
+        function renderCatalog() {
+            const catalogContainer = document.getElementById('product-catalog');
+            catalogContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                catalogContainer.innerHTML = '<p class="text-sm text-gray-500 col-span-full text-center py-6">Асортимент оновлюється. Слідкуйте за новинами.</p>';
+                return;
+            }
+
+            products.forEach(prod => {
+                const card = document.createElement('div');
+                card.className = 'product-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center mb-3 p-1">
+                            ${prod.photos.length > 0 ? `<img src="${prod.photos[0]}" class="full-image-preview">` : '<i class="fa-solid fa-image text-4xl text-gray-300"></i>'}
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-sm mb-1">${prod.name}</h3>
+                        <p class="text-indigo-600 font-bold text-base mb-3">${prod.price}</p>
+                    </div>
+                    <button class="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white font-semibold py-2 rounded-lg text-xs transition">Замовити оптом</button>
+                `;
+                catalogContainer.appendChild(card);
+            });
+        }
+
+        // Завантаження каталогу при завантаженні сторінки
+        renderCatalog();
     </script>
 </body>
 </html>
