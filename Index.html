@@ -83,9 +83,7 @@
     <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto relative">
             <button onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-            <div id="productModalContent">
-                <!-- Контент товара подгружается динамически -->
-            </div>
+            <div id="productModalContent"></div>
         </div>
     </div>
 
@@ -96,11 +94,8 @@
                 <h3 class="text-xl font-bold">Ваш кошик</h3>
                 <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
-            <div id="cartItems" class="flex-1 space-y-4 mb-4">
-                <!-- Товары в корзине -->
-            </div>
+            <div id="cartItems" class="flex-1 space-y-4 mb-4"></div>
             
-            <!-- Форма ввода данных покупателя -->
             <div class="border-t pt-4 space-y-3">
                 <h4 class="font-bold text-gray-700">Дані для доставки (Одеса / Україна)</h4>
                 <input type="text" id="orderName" placeholder="Ваше ім'я та прізвище" class="w-full border rounded-lg p-2 text-sm" required>
@@ -120,78 +115,111 @@
         </div>
     </div>
 
-    <!-- Модальное окно админки -->
+    <!-- Панель администратора -->
     <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Панель керування (Адмінка)</h3>
                 <button id="closeAdmin" class="text-gray-500 text-2xl">&times;</button>
             </div>
 
             <!-- Вкладки админки -->
-            <div class="flex border-b mb-4">
-                <button onclick="switchAdminTab('products')" id="tabProductsBtn" class="py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600">Товари</button>
-                <button onclick="switchAdminTab('orders')" id="tabOrdersBtn" class="py-2 px-4 font-bold text-gray-500">Замовлення та клієнти (<span id="ordersCountBadge">0</span>)</button>
+            <div class="flex border-b mb-4 justify-between items-center">
+                <div class="flex">
+                    <button onclick="switchAdminTab('products')" id="tabProductsBtn" class="py-2 px-4 font-bold border-b-2 border-indigo-600 text-indigo-600">Товари</button>
+                    <button onclick="switchAdminTab('orders')" id="tabOrdersBtn" class="py-2 px-4 font-bold text-gray-500">Замовлення (<span id="ordersCountBadge">0</span>)</button>
+                </div>
+                <!-- Кнопка Добавить товар (+) -->
+                <button onclick="openProductFormModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center space-x-1 shadow">
+                    <i class="fas fa-plus"></i>
+                    <span>Додати товар</span>
+                </button>
             </div>
 
-            <!-- Секция 1: Управление товарами -->
-            <div id="adminProductsSection" class="space-y-6">
-                <form id="addProductForm" class="space-y-3 bg-gray-50 p-4 rounded-xl border">
-                    <h4 class="font-bold text-gray-700">Додати новий товар (Опт / Роздріб)</h4>
-                    <div>
-                        <input type="text" id="prodTitle" placeholder="Назва товару" required class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <select id="prodCategory" class="w-full border rounded-lg p-2 text-sm">
-                            <option value="women">Жіночий одяг</option>
-                            <option value="men">Чоловічий одяг</option>
-                            <option value="shoes">Взуття</option>
-                            <option value="tech">Міні-техніка</option>
-                        </select>
-                        <input type="url" id="prodImg" placeholder="Посилання на фото (URL)" required class="w-full border rounded-lg p-2 text-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за 1 шт (Роздріб)</label>
-                            <input type="number" id="prodPrice" placeholder="напр. 4500" required class="w-full border rounded-lg p-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за ростовку (Опт)</label>
-                            <input type="number" id="prodBoxPrice" placeholder="напр. 15000" required class="w-full border rounded-lg p-2 text-sm">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Штук у ростовці (Опт)</label>
-                            <input type="number" id="prodBoxQty" placeholder="напр. 5 шт" required class="w-full border rounded-lg p-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Розміри (Євро / Укр)</label>
-                            <input type="text" id="prodSizes" placeholder="напр. S(44), M(46), L(48)" required class="w-full border rounded-lg p-2 text-sm">
-                        </div>
-                    </div>
-                    <div>
-                        <textarea id="prodDesc" placeholder="Повний опис товару, матеріал, особливості..." rows="2" class="w-full border rounded-lg p-2 text-sm" required></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-bold text-sm">Додати товар у каталог</button>
-                </form>
-
-                <div>
-                    <h4 class="font-bold text-gray-700 mb-2">Існуючі товари</h4>
-                    <div id="adminProductsList" class="space-y-2 max-h-48 overflow-y-auto">
-                        <!-- Рендерится через JS -->
-                    </div>
+            <!-- Секция 1: Список товаров с редактированием -->
+            <div id="adminProductsSection" class="space-y-4">
+                <h4 class="font-bold text-gray-700">Керування товарами в каталозі</h4>
+                <div id="adminProductsList" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                    <!-- Рендерится через JS -->
                 </div>
             </div>
 
             <!-- Секция 2: Заказы и клиенты -->
             <div id="adminOrdersSection" class="hidden space-y-4">
                 <h4 class="font-bold text-gray-700">Список замовлень від покупців</h4>
-                <div id="adminOrdersList" class="space-y-3 max-h-96 overflow-y-auto">
-                    <!-- Заказы рендерятся здесь -->
-                </div>
+                <div id="adminOrdersList" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания/редактирования товара с полем ИИ -->
+    <div id="productFormModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[95vh] overflow-y-auto relative">
+            <button onclick="closeProductFormModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            
+            <h3 id="productFormTitle" class="text-xl font-bold text-gray-800 mb-4">Додати новий товар</h3>
+
+            <!-- AI Автозаполнение -->
+            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-4 space-y-2">
+                <label class="block text-xs font-bold text-indigo-900 flex items-center space-x-1">
+                    <i class="fas fa-robot text-indigo-600"></i>
+                    <span>Автозаповнення за допомогою штучного інтелекту (ШІ)</span>
+                </label>
+                <textarea id="aiInputText" placeholder="Вставте сюди повний текст опису товару від постачальника (ціни, розміри, назву)..." rows="2" class="w-full border rounded-lg p-2 text-xs bg-white"></textarea>
+                <button type="button" onclick="parseWithAI()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition w-full">
+                    ✨ Розібрати текст і заповнити поля автоматично
+                </button>
             </div>
 
+            <form id="productEditForm" class="space-y-3" onsubmit="saveProduct(event)">
+                <input type="hidden" id="editProdId">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару</label>
+                    <input type="text" id="prodTitle" required class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Категорія</label>
+                        <select id="prodCategory" class="w-full border rounded-lg p-2 text-sm">
+                            <option value="women">Жіночий одяг</option>
+                            <option value="men">Чоловічий одяг</option>
+                            <option value="shoes">Взуття</option>
+                            <option value="tech">Міні-техніка</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Посилання на фото (URL)</label>
+                        <input type="url" id="prodImg" required class="w-full border rounded-lg p-2 text-sm" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за 1 шт (грн)</label>
+                        <input type="number" id="prodPrice" required class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Ціна за ростовку (грн)</label>
+                        <input type="number" id="prodBoxPrice" required class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Штук у ростовці</label>
+                        <input type="number" id="prodBoxQty" required class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Розміри (Євро / Укр)</label>
+                        <input type="text" id="prodSizes" required class="w-full border rounded-lg p-2 text-sm" placeholder="S(42), M(44)...">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Повний опис товару</label>
+                    <textarea id="prodDesc" rows="3" required class="w-full border rounded-lg p-2 text-sm"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-bold text-sm transition">
+                    Зберегти товар
+                </button>
+            </form>
         </div>
     </div>
 
@@ -206,7 +234,7 @@
                 boxPrice: 15000, 
                 boxQty: 4, 
                 sizes: 'M (48), L (50), XL (52), XXL (54)', 
-                desc: 'Стильна демісезонна куртка високої якості. Водовідштовхувальна тканина, легкий утеплювач. Виробництво: фабричний Китай/Туреччина.', 
+                desc: 'Стильна демісезонна куртка високої якості. Водовідштовхувальна тканина.', 
                 img: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=500' 
             },
             { 
@@ -216,31 +244,9 @@
                 price: 3200, 
                 boxPrice: 11000, 
                 boxQty: 4, 
-                sizes: 'S (42-44), M (44-46), L (46-48), XL (48-50)', 
-                desc: 'Елегантна вечірня сукня для особливих подій. Приємна до тіла тканина, відмінний пошив.', 
+                sizes: 'S (42-44), M (44-46), L (46-48)', 
+                desc: 'Елегантна вечірня сукня для особливих подій.', 
                 img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=500' 
-            },
-            { 
-                id: 3, 
-                title: 'Кросівки спортивні', 
-                category: 'shoes', 
-                price: 5800, 
-                boxPrice: 20000, 
-                boxQty: 5, 
-                sizes: '41 (26 см), 42 (27 см), 43 (27.5 см), 44 (28 см), 45 (29 см)', 
-                desc: 'Зручні спортивні кросівки на кожен день. Дихаюча сітка, амортизуюча підошва.', 
-                img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500' 
-            },
-            { 
-                id: 4, 
-                title: 'Бездротовий зволожувач', 
-                category: 'tech', 
-                price: 1900, 
-                boxPrice: 6500, 
-                boxQty: 4, 
-                sizes: 'Універсальний розмір (Євро)', 
-                desc: 'Компактний ультразвуковий зволожувач повітря з підсвічуванням. Працює від акумулятора.', 
-                img: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=500' 
             }
         ];
 
@@ -249,7 +255,7 @@
         let orders = JSON.parse(localStorage.getItem('orders')) || [];
         let logoClicks = 0;
 
-        // Отрисовка товаров в каталоге
+        // Отрисовка товаров
         function renderProducts(items = products) {
             const grid = document.getElementById('productsGrid');
             grid.innerHTML = items.map(product => `
@@ -268,13 +274,12 @@
             `).join('');
         }
 
-        // Открытие детального модального окна товара
+        // Детальное окно товара
         function openProductModal(id) {
             const p = products.find(prod => prod.id === id);
             if (!p) return;
 
-            const modalContent = document.getElementById('productModalContent');
-            modalContent.innerHTML = `
+            document.getElementById('productModalContent').innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <img src="${p.img}" alt="${p.title}" class="w-full h-72 object-cover rounded-xl shadow">
                     <div class="flex flex-col justify-between">
@@ -282,7 +287,7 @@
                             <h2 class="text-2xl font-bold text-gray-800 mb-2">${p.title}</h2>
                             <p class="text-sm text-gray-600 mb-4">${p.desc}</p>
                             <div class="bg-gray-50 p-3 rounded-xl border mb-4 space-y-1 text-sm">
-                                <div class="font-semibold text-gray-700">Розмірна сітка (Євро / Укр):</div>
+                                <div class="font-semibold text-gray-700">Розмірна сітка:</div>
                                 <div class="text-indigo-600 font-bold">${p.sizes}</div>
                             </div>
                         </div>
@@ -290,20 +295,16 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-lg font-bold text-indigo-600">${p.price} грн</div>
-                                    <div class="text-xs text-gray-500">Ціна за 1 штуку (роздріб)</div>
+                                    <div class="text-xs text-gray-500">За 1 штуку (роздріб)</div>
                                 </div>
-                                <button onclick="addToCartType(${p.id}, 'piece')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">
-                                    Купити 1 шт
-                                </button>
+                                <button onclick="addToCartType(${p.id}, 'piece')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Купити 1 шт</button>
                             </div>
                             <div class="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-200">
                                 <div>
                                     <div class="text-lg font-bold text-emerald-700">${p.boxPrice} грн</div>
-                                    <div class="text-xs text-emerald-800">Ціна за ростовку (${p.boxQty} шт)</div>
+                                    <div class="text-xs text-emerald-800">За ростовку (${p.boxQty} шт)</div>
                                 </div>
-                                <button onclick="addToCartType(${p.id}, 'box')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">
-                                    Купити ростовку
-                                </button>
+                                <button onclick="addToCartType(${p.id}, 'box')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition">Купити ростовку</button>
                             </div>
                         </div>
                     </div>
@@ -316,42 +317,23 @@
             document.getElementById('productModal').classList.add('hidden');
         }
 
-        // Фильтрация
         function filterCategory(cat) {
             if(cat === 'all') renderProducts(products);
             else renderProducts(products.filter(p => p.category === cat));
         }
 
-        // Добавление в корзину (по штучно или ростовкой)
+        // Корзина
         function addToCartType(id, type) {
             const prod = products.find(p => p.id === id);
-            const cartKey = `${id}_${type}`; // уникальный ключ для розницы и ростовки
+            const cartKey = `${id}_${type}`;
             const existing = cart.find(c => c.cartKey === cartKey);
 
             if (type === 'piece') {
-                if (existing) {
-                    existing.qty++;
-                } else {
-                    cart.push({
-                        cartKey,
-                        id: prod.id,
-                        title: `${prod.title} (Роздріб - 1 шт)`,
-                        price: prod.price,
-                        qty: 1
-                    });
-                }
+                if (existing) existing.qty++;
+                else cart.push({ cartKey, id: prod.id, title: `${prod.title} (Роздріб - 1 шт)`, price: prod.price, qty: 1 });
             } else {
-                if (existing) {
-                    existing.qty++;
-                } else {
-                    cart.push({
-                        cartKey,
-                        id: prod.id,
-                        title: `${prod.title} (Ростовка опт - ${prod.boxQty} шт: ${prod.sizes})`,
-                        price: prod.boxPrice,
-                        qty: 1
-                    });
-                }
+                if (existing) existing.qty++;
+                else cart.push({ cartKey, id: prod.id, title: `${prod.title} (Ростовка - ${prod.boxQty} шт)`, price: prod.boxPrice, qty: 1 });
             }
 
             updateCart();
@@ -380,9 +362,7 @@
                     </div>
                 `).join('');
             }
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('cartTotal').textContent = total + ' грн';
+            document.getElementById('cartTotal').textContent = cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + ' грн';
         }
 
         function removeFromCart(cartKey) {
@@ -390,45 +370,35 @@
             updateCart();
         }
 
-        // Оформление заказа
         function checkout() {
             if(cart.length === 0) return alert('Кошик порожній!');
             const name = document.getElementById('orderName').value.trim();
             const phone = document.getElementById('orderPhone').value.trim();
             const address = document.getElementById('orderAddress').value.trim();
 
-            if(!name || !phone || !address) {
-                alert('Будь ласка, заповніть усі поля для доставки!');
-                return;
-            }
+            if(!name || !phone || !address) return alert('Заповніть дані для доставки!');
 
-            const newOrder = {
+            orders.unshift({
                 id: Date.now(),
                 date: new Date().toLocaleString('uk-UA'),
                 customer: { name, phone, address },
                 items: [...cart],
                 total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0)
-            };
-
-            orders.unshift(newOrder);
+            });
             localStorage.setItem('orders', JSON.stringify(orders));
 
-            alert('Дякуємо за замовлення! Наш менеджер зв\'яжеться з вами.');
+            alert('Замовлення успішно оформлено!');
             cart = [];
             updateCart();
             document.getElementById('cartModal').classList.add('hidden');
-            document.getElementById('orderName').value = '';
-            document.getElementById('orderPhone').value = '';
-            document.getElementById('orderAddress').value = '';
         }
 
-        // Вход в Админку (3 клика по логотипу)
+        // Админка
         document.getElementById('logo').addEventListener('click', () => {
             logoClicks++;
             if(logoClicks === 3) {
                 logoClicks = 0;
-                const pass = prompt('Введіть пароль адміністратора:');
-                if(pass === '7777') {
+                if(prompt('Введіть пароль адміністратора:') === '7777') {
                     openAdminPanel();
                 } else {
                     alert('Невірний пароль!');
@@ -465,29 +435,29 @@
         function renderAdminProducts() {
             const list = document.getElementById('adminProductsList');
             list.innerHTML = products.map(p => `
-                <div class="flex items-center justify-between bg-white p-2 rounded border text-sm">
-                    <span class="truncate flex-1 font-medium">${p.title} | Шт: ${p.price}грн | Ростовка: ${p.boxPrice}грн (${p.boxQty}шт)</span>
-                    <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700 ml-2 font-bold px-2">Видалити</button>
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border text-sm">
+                    <div class="flex items-center space-x-3 flex-1 truncate">
+                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-lg">
+                        <div class="truncate">
+                            <div class="font-bold">${p.title}</div>
+                            <div class="text-xs text-gray-500">Шт: ${p.price}грн | Ростовка: ${p.boxPrice}грн (${p.boxQty}шт)</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editProduct(${p.id})" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">Редагувати</button>
+                        <button onclick="deleteProduct(${p.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">Видалити</button>
+                    </div>
                 </div>
             `).join('');
-        }
-
-        function deleteProduct(id) {
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem('products', JSON.stringify(products));
-            renderProducts();
-            renderAdminProducts();
         }
 
         function renderAdminOrders() {
             document.getElementById('ordersCountBadge').textContent = orders.length;
             const list = document.getElementById('adminOrdersList');
-            
             if(orders.length === 0) {
                 list.innerHTML = '<p class="text-gray-500 text-center py-4">Ще немає замовлень</p>';
                 return;
             }
-
             list.innerHTML = orders.map(ord => `
                 <div class="bg-gray-50 p-4 rounded-xl border space-y-2 text-sm">
                     <div class="flex justify-between font-bold text-indigo-600">
@@ -496,55 +466,130 @@
                     </div>
                     <div class="border-t pt-1">
                         <div class="font-semibold">Клієнт: ${ord.customer.name}</div>
-                        <div>Тел: ${ord.customer.phone}</div>
-                        <div>Адреса: ${ord.customer.address}</div>
+                        <div>Тел: ${ord.customer.phone} | Адреса: ${ord.customer.address}</div>
                     </div>
                     <div class="border-t pt-1">
-                        <div class="font-semibold text-gray-700">Товари:</div>
                         ${ord.items.map(i => `<div class="text-xs text-gray-600">- ${i.title} (${i.qty} шт.) — ${i.price * i.qty} грн</div>`).join('')}
                     </div>
                     <div class="border-t pt-1 flex justify-between font-bold text-gray-800">
-                        <span>Сума до сплати:</span>
+                        <span>Сума:</span>
                         <span class="text-green-600">${ord.total} грн</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Добавление товара через админку
-        document.getElementById('addProductForm').addEventListener('submit', (e) => {
+        // Модальное окно создания/редактирования
+        function openProductFormModal(prodId = null) {
+            document.getElementById('aiInputText').value = '';
+            if (prodId) {
+                const p = products.find(x => x.id === prodId);
+                document.getElementById('productFormTitle').textContent = 'Редагувати товар';
+                document.getElementById('editProdId').value = p.id;
+                document.getElementById('prodTitle').value = p.title;
+                document.getElementById('prodCategory').value = p.category;
+                document.getElementById('prodImg').value = p.img;
+                document.getElementById('prodPrice').value = p.price;
+                document.getElementById('prodBoxPrice').value = p.boxPrice;
+                document.getElementById('prodBoxQty').value = p.boxQty;
+                document.getElementById('prodSizes').value = p.sizes;
+                document.getElementById('prodDesc').value = p.desc;
+            } else {
+                document.getElementById('productFormTitle').textContent = 'Додати новий товар';
+                document.getElementById('productEditForm').reset();
+                document.getElementById('editProdId').value = '';
+            }
+            document.getElementById('productFormModal').classList.remove('hidden');
+        }
+
+        function closeProductFormModal() {
+            document.getElementById('productFormModal').classList.add('hidden');
+        }
+
+        function editProduct(id) {
+            openProductFormModal(id);
+        }
+
+        function deleteProduct(id) {
+            if(confirm('Видалити цей товар?')) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('products', JSON.stringify(products));
+                renderProducts();
+                renderAdminProducts();
+            }
+        }
+
+        function saveProduct(e) {
             e.preventDefault();
-            const newProd = {
-                id: Date.now(),
+            const id = document.getElementById('editProdId').value;
+            const data = {
+                id: id ? Number(id) : Date.now(),
                 title: document.getElementById('prodTitle').value,
                 category: document.getElementById('prodCategory').value,
+                img: document.getElementById('prodImg').value,
                 price: Number(document.getElementById('prodPrice').value),
                 boxPrice: Number(document.getElementById('prodBoxPrice').value),
                 boxQty: Number(document.getElementById('prodBoxQty').value),
                 sizes: document.getElementById('prodSizes').value,
-                desc: document.getElementById('prodDesc').value,
-                img: document.getElementById('prodImg').value
+                desc: document.getElementById('prodDesc').value
             };
-            products.push(newProd);
+
+            if (id) {
+                const index = products.findIndex(p => p.id === Number(id));
+                products[index] = data;
+            } else {
+                products.push(data);
+            }
+
             localStorage.setItem('products', JSON.stringify(products));
             renderProducts();
             renderAdminProducts();
-            e.target.reset();
-            alert('Товар успішно додано до каталогу!');
-        });
+            closeProductFormModal();
+            alert('Товар успішно збережено!');
+        }
 
-        // Слушатели модалок
+        // Интеллектуальный разбор текста (ИИ-помощник)
+        function parseWithAI() {
+            const text = document.getElementById('aiInputText').value;
+            if(!text.trim()) return alert('Будь ласка, введіть текст для аналізу!');
+
+            // Извлечение чисел для цен и количества
+            const numbers = text.match(/\d+/g) || [];
+            
+            // Первая строка текста или первые 4 слова обычно название
+            const lines = text.split('\n').filter(l => l.trim().length > 0);
+            const title = lines[0] ? lines[0].substring(0, 45) : 'Товар з оновлення';
+            
+            // Попытка найти цены (если чисел несколько)
+            let price = numbers[0] ? Number(numbers[0]) : 500;
+            let boxPrice = numbers[1] ? Number(numbers[1]) : price * 4;
+            let boxQty = 4; // стандартное количество в ростовке
+
+            // Поиск размеров в тексте (например S, M, L, XL или цифры 42, 44)
+            const sizesMatch = text.match(/([SMLXL0-9\-\s,\(\)]+розмір[а-х]?|[0-9]{2}[\s\-\/][0-9]{2})/gi);
+            const sizes = sizesMatch ? sizesMatch[0] : 'S, M, L, XL';
+
+            // Заполняем форму
+            document.getElementById('prodTitle').value = title;
+            document.getElementById('prodPrice').value = price;
+            document.getElementById('prodBoxPrice').value = boxPrice;
+            document.getElementById('prodBoxQty').value = boxQty;
+            document.getElementById('prodSizes').value = sizes;
+            document.getElementById('prodDesc').value = text;
+
+            alert('✨ ШІ успішно проаналізував текст та заповнив поля форми!');
+        }
+
+        // Слушатели
         document.getElementById('cartBtn').onclick = () => document.getElementById('cartModal').classList.remove('hidden');
         document.getElementById('closeCart').onclick = () => document.getElementById('cartModal').classList.add('hidden');
         document.getElementById('closeAdmin').onclick = () => document.getElementById('adminModal').classList.add('hidden');
 
-        // Поиск
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             renderProducts(products.filter(p => p.title.toLowerCase().includes(val)));
         });
 
-        // Инициализация
         renderProducts();
         updateCart();
     </script>
