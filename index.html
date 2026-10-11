@@ -11,6 +11,11 @@
     <style>
         .category-card:hover { transform: translateY(-3px); transition: transform 0.2s ease; }
         .product-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
+        .full-image-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
@@ -118,6 +123,15 @@
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Детальний опис товару:</label>
                             <textarea id="prod-description" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Введіть опис товару..."></textarea>
                         </div>
+                        
+                        <!-- Завантаження фотографій (до 10+ з можливістю видалення) -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Фотографії товару (можна вибрати кілька):</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2" id="admin-photo-preview">
+                                <!-- Прев'ю фоток із хрестиком -->
+                            </div>
+                            <input type="file" id="prod-photos-input" multiple accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                        </div>
                     </div>
 
                     <div class="flex space-x-2 mt-4">
@@ -174,9 +188,55 @@
             resetForm();
         }
 
-        // Локальне збереження товарів
+        // Локальне збереження товарів та фотографій
         let products = JSON.parse(localStorage.getItem('megastore_products')) || [];
+        let currentPhotos = [];
         let itemQuantities = {};
+
+        // Обробка вибору фоток
+        const photoInput = document.getElementById('prod-photos-input');
+        const photoPreview = document.getElementById('admin-photo-preview');
+
+        photoInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) continue;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    currentPhotos.push(event.target.result);
+                    renderPhotoPreviews();
+                }
+                reader.readAsDataURL(file);
+            }
+            photoInput.value = '';
+        });
+
+        function renderPhotoPreviews() {
+            photoPreview.innerHTML = '';
+            currentPhotos.forEach((src, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative h-20 bg-gray-100 rounded-lg overflow-hidden border flex items-center justify-center p-1';
+
+                const img = document.createElement('img');
+                img.src = src;
+                img.className = 'full-image-preview';
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700 transition cursor-pointer';
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.title = 'Видалити фото';
+                delBtn.onclick = function() {
+                    currentPhotos.splice(index, 1);
+                    renderPhotoPreviews();
+                };
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(delBtn);
+                photoPreview.appendChild(wrapper);
+            });
+        }
 
         // ШІ-аналіз суцільного тексту
         function parseTextWithAI() {
@@ -238,11 +298,13 @@
                     prod.rostovkaPrice = rostovkaPrice;
                     prod.color = color;
                     prod.description = description;
+                    prod.photos = [...currentPhotos];
                 }
             } else {
                 const newProd = {
                     id: Date.now(),
-                    name, unitPrice, countInRostovka, rostovkaPrice, color, description
+                    name, unitPrice, countInRostovka, rostovkaPrice, color, description,
+                    photos: [...currentPhotos]
                 };
                 products.push(newProd);
             }
@@ -263,6 +325,8 @@
             document.getElementById('prod-description').value = '';
             document.getElementById('ai-input-text').value = '';
             document.getElementById('form-title').innerText = 'Додати новий товар';
+            currentPhotos = [];
+            renderPhotoPreviews();
         }
 
         function renderAdminProducts() {
@@ -279,9 +343,14 @@
                 item.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-xl border';
 
                 item.innerHTML = `
-                    <div>
-                        <h5 class="font-bold text-sm text-gray-800">${prod.name}</h5>
-                        <span class="text-xs text-indigo-600 font-semibold">${prod.rostovkaPrice} грн / ростовка (${prod.countInRostovka} шт)</span>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-white rounded-lg border flex items-center justify-center overflow-hidden">
+                            ${prod.photos && prod.photos.length > 0 ? `<img src="${prod.photos[0]}" class="full-image-preview">` : '<i class="fa-solid fa-image text-gray-300"></i>'}
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-sm text-gray-800">${prod.name}</h5>
+                            <span class="text-xs text-indigo-600 font-semibold">${prod.rostovkaPrice} грн / ростовка (${prod.countInRostovka} шт)</span>
+                        </div>
                     </div>
                     <div class="flex space-x-2">
                         <button onclick="editProduct(${prod.id})" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-100 transition"><i class="fa-solid fa-pen"></i></button>
@@ -304,6 +373,8 @@
             document.getElementById('prod-color').value = prod.color || '';
             document.getElementById('prod-description').value = prod.description || '';
             document.getElementById('form-title').innerText = 'Редагувати товар';
+            currentPhotos = prod.photos ? [...prod.photos] : [];
+            renderPhotoPreviews();
         }
 
         function deleteProduct(id) {
@@ -347,8 +418,8 @@
 
                 card.innerHTML = `
                     <div>
-                        <div class="h-36 bg-indigo-50 rounded-lg flex items-center justify-center mb-3 text-indigo-400">
-                            <i class="fa-solid fa-box-open text-4xl"></i>
+                        <div class="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center mb-3 p-1">
+                            ${prod.photos && prod.photos.length > 0 ? `<img src="${prod.photos[0]}" class="full-image-preview">` : '<i class="fa-solid fa-box-open text-4xl text-indigo-400"></i>'}
                         </div>
                         <h3 class="font-bold text-gray-900 text-sm mb-1">${prod.name}</h3>
                         ${prod.color ? `<p class="text-xs text-gray-500 mb-1">Колір: <b>${prod.color}</b></p>` : ''}
