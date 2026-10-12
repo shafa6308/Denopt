@@ -87,9 +87,9 @@
                 <!-- Блок розпізнавання ШІ -->
                 <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
                     <label class="block text-xs font-bold text-indigo-900 mb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> ШІ-розпізнавання опису товару:</label>
-                    <textarea id="ai-input-text" rows="2" class="w-full p-2 text-xs border rounded-lg bg-white focus:outline-none focus:border-indigo-500 mb-2" placeholder="Вставте опис товару, наприклад: Кросівки жіночі, 150 грн/шт, у ростовці 6 пар, розміри 36-41, колір Чорний"></textarea>
+                    <textarea id="ai-input-text" rows="3" class="w-full p-2 text-xs border rounded-lg bg-white focus:outline-none focus:border-indigo-500 mb-2" placeholder="Вставте повний текст поста (наприклад: Новинка - жіночі зимові шапки з ангори... ціна, розміри, ростовка)"></textarea>
                     <button onclick="parseTextWithAI()" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition">
-                        <i class="fa-solid fa-bolt mr-1"></i> Розпарсити текст
+                        <i class="fa-solid fa-bolt mr-1"></i> Розпарсити текст розумно
                     </button>
                 </div>
 
@@ -100,7 +100,7 @@
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                         <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару (перша стрічка):</label>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару (ключові слова):</label>
                             <input type="text" id="prod-name" class="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Назва">
                         </div>
                         <div>
@@ -242,7 +242,7 @@
             });
         }
 
-        // Розумний ШІ-аналіз тексту
+        // Розумний ШІ-аналіз тексту (очищення від слів "Новинка", емодзі, сміття)
         function parseTextWithAI() {
             const text = document.getElementById('ai-input-text').value;
             if (!text.trim()) {
@@ -252,9 +252,21 @@
 
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-            // 1. Назва товару — тільки перша стрічка без сміття
+            // 1. Інтелектуальний пошук назви (очищуємо першу/значущу стрічку від емодзі, "Новинка", "Хіт" тощо)
             let rawName = lines[0] || "Товар";
-            let cleanName = rawName.replace(/[\d+]+(грн|шт|пар|грн\/шт).*/gi, '').trim();
+            let cleanName = rawName
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // емодзі
+                .replace(/^(новинка|хіт|розпродаж|акція|топ|бомба|super|new)[\s\-–—:]*/gi, '') // маркетингові слова на початку
+                .replace(/[\d+]+(грн|шт|пар|грн\/шт).*/gi, '') // ціни
+                .trim();
+
+            if (cleanName.length < 3 && lines.length > 1) {
+                // Якщо перша стрічка була короткою (наприклад, тільки слово Новинка), беремо наступну
+                cleanName = lines[1]
+                    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+                    .replace(/^(новинка|хіт|розпродаж|акція|топ)[\s\-–—:]*/gi, '')
+                    .trim();
+            }
             if (!cleanName) cleanName = rawName;
 
             // 2. Кількість у ростовці
@@ -266,7 +278,7 @@
             const unitPrice = unitPriceMatch ? parseInt(unitPriceMatch[1]) : 0;
 
             // 4. Колір
-            const colors = ['чорний', 'білий', 'червоний', 'синій', 'зелений', 'жовтий', 'сірий', 'бежевий', 'рожевий', 'коричневий', 'хакі'];
+            const colors = ['чорний', 'білий', 'червоний', 'синій', 'зелений', 'жовтий', 'сірий', 'бежевий', 'рожевий', 'коричневий', 'хакі', 'темно-синій', 'бордовий'];
             let foundColor = '';
             colors.forEach(c => {
                 if (text.toLowerCase().includes(c)) foundColor = c.charAt(0).toUpperCase() + c.slice(1);
@@ -279,7 +291,7 @@
                 foundSizes = sizeMatch[2] ? sizeMatch[2].trim() : sizeMatch[1].trim();
             }
 
-            // 6. Опис (без дублювання назви, цін і ростовок)
+            // 6. Опис (без дублювання назви, цін, ростовок)
             let descLines = lines.slice(1).filter(l => {
                 const lower = l.toLowerCase();
                 return !lower.includes('грн') && !lower.includes('ростовк') && !lower.includes('шт') && !lower.includes('ціна') && !lower.includes('розмір');
