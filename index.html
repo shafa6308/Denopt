@@ -87,7 +87,7 @@
                 <!-- Блок розпізнавання ШІ -->
                 <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
                     <label class="block text-xs font-bold text-indigo-900 mb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> ШІ-розпізнавання опису товару:</label>
-                    <textarea id="ai-input-text" rows="2" class="w-full p-2 text-xs border rounded-lg bg-white focus:outline-none focus:border-indigo-500 mb-2" placeholder="Вставте опис товару, наприклад: Кросівки чорні, 150 грн/шт, у ростовці 6 пар, колір Чорний"></textarea>
+                    <textarea id="ai-input-text" rows="2" class="w-full p-2 text-xs border rounded-lg bg-white focus:outline-none focus:border-indigo-500 mb-2" placeholder="Вставте опис товару, наприклад: Кросівки жіночі, 150 грн/шт, у ростовці 6 пар, розміри 36-41, колір Чорний"></textarea>
                     <button onclick="parseTextWithAI()" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition">
                         <i class="fa-solid fa-bolt mr-1"></i> Розпарсити текст
                     </button>
@@ -100,7 +100,7 @@
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                         <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару:</label>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Назва товару (перша стрічка):</label>
                             <input type="text" id="prod-name" class="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Назва">
                         </div>
                         <div>
@@ -118,6 +118,10 @@
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Колір:</label>
                             <input type="text" id="prod-color" class="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Наприклад: Чорний">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Розміри:</label>
+                            <input type="text" id="prod-sizes" class="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Наприклад: 36-41 або S, M, L">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Детальний опис товару:</label>
@@ -238,7 +242,7 @@
             });
         }
 
-        // ШІ-аналіз суцільного тексту
+        // Розумний ШІ-аналіз тексту
         function parseTextWithAI() {
             const text = document.getElementById('ai-input-text').value;
             if (!text.trim()) {
@@ -246,25 +250,48 @@
                 return;
             }
 
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            // 1. Назва товару — тільки перша стрічка без сміття
+            let rawName = lines[0] || "Товар";
+            let cleanName = rawName.replace(/[\d+]+(грн|шт|пар|грн\/шт).*/gi, '').trim();
+            if (!cleanName) cleanName = rawName;
+
+            // 2. Кількість у ростовці
             const countMatch = text.match(/(\d+)\s*(шт|пари|пар|ростовці|у ростовці)/i) || text.match(/ростовка\s*(\d+)/i);
             const count = countMatch ? parseInt(countMatch[1]) : 1;
 
+            // 3. Ціна за штуку
             const unitPriceMatch = text.match(/(\d+)\s*(грн|грн\/шт|\$|€)/i);
             const unitPrice = unitPriceMatch ? parseInt(unitPriceMatch[1]) : 0;
 
-            const colors = ['чорний', 'білий', 'червоний', 'синій', 'зелений', 'жовтий', 'сірий', 'бежевий', 'рожевий', 'коричневий'];
+            // 4. Колір
+            const colors = ['чорний', 'білий', 'червоний', 'синій', 'зелений', 'жовтий', 'сірий', 'бежевий', 'рожевий', 'коричневий', 'хакі'];
             let foundColor = '';
             colors.forEach(c => {
                 if (text.toLowerCase().includes(c)) foundColor = c.charAt(0).toUpperCase() + c.slice(1);
             });
 
-            const cleanName = text.split('\n')[0].replace(/[\d+]+ грн.*/gi, '').trim() || "Товар";
+            // 5. Розміри
+            let foundSizes = '';
+            const sizeMatch = text.match(/(розміри?[:\s]*)([^\n]+)/i) || text.match(/(\d{2}\s*[-–]\s*\d{2})/);
+            if (sizeMatch) {
+                foundSizes = sizeMatch[2] ? sizeMatch[2].trim() : sizeMatch[1].trim();
+            }
+
+            // 6. Опис (без дублювання назви, цін і ростовок)
+            let descLines = lines.slice(1).filter(l => {
+                const lower = l.toLowerCase();
+                return !lower.includes('грн') && !lower.includes('ростовк') && !lower.includes('шт') && !lower.includes('ціна') && !lower.includes('розмір');
+            });
+            let cleanDescription = descLines.join('\n').trim();
 
             document.getElementById('prod-name').value = cleanName;
             document.getElementById('prod-unit-price').value = unitPrice;
             document.getElementById('prod-count-in-rostovka').value = count;
             document.getElementById('prod-color').value = foundColor;
-            document.getElementById('prod-description').value = text;
+            document.getElementById('prod-sizes').value = foundSizes;
+            document.getElementById('prod-description').value = cleanDescription;
 
             calculateRostovka();
         }
@@ -282,6 +309,7 @@
             const countInRostovka = parseInt(document.getElementById('prod-count-in-rostovka').value) || 1;
             const rostovkaPrice = parseFloat(document.getElementById('prod-rostovka-price').value) || 0;
             const color = document.getElementById('prod-color').value.trim();
+            const sizes = document.getElementById('prod-sizes').value.trim();
             const description = document.getElementById('prod-description').value.trim();
 
             if (!name || !rostovkaPrice) {
@@ -297,13 +325,14 @@
                     prod.countInRostovka = countInRostovka;
                     prod.rostovkaPrice = rostovkaPrice;
                     prod.color = color;
+                    prod.sizes = sizes;
                     prod.description = description;
                     prod.photos = [...currentPhotos];
                 }
             } else {
                 const newProd = {
                     id: Date.now(),
-                    name, unitPrice, countInRostovka, rostovkaPrice, color, description,
+                    name, unitPrice, countInRostovka, rostovkaPrice, color, sizes, description,
                     photos: [...currentPhotos]
                 };
                 products.push(newProd);
@@ -322,6 +351,7 @@
             document.getElementById('prod-count-in-rostovka').value = '';
             document.getElementById('prod-rostovka-price').value = '';
             document.getElementById('prod-color').value = '';
+            document.getElementById('prod-sizes').value = '';
             document.getElementById('prod-description').value = '';
             document.getElementById('ai-input-text').value = '';
             document.getElementById('form-title').innerText = 'Додати новий товар';
@@ -371,6 +401,7 @@
             document.getElementById('prod-count-in-rostovka').value = prod.countInRostovka || '';
             document.getElementById('prod-rostovka-price').value = prod.rostovkaPrice;
             document.getElementById('prod-color').value = prod.color || '';
+            document.getElementById('prod-sizes').value = prod.sizes || '';
             document.getElementById('prod-description').value = prod.description || '';
             document.getElementById('form-title').innerText = 'Редагувати товар';
             currentPhotos = prod.photos ? [...prod.photos] : [];
@@ -386,7 +417,7 @@
             }
         }
 
-        // Відображення товарів у каталозі з вибором кількості ростовок (+ / -)
+        // Керування кількістю ростовок (+ / -) на головній
         function changeQty(id, delta) {
             if (!itemQuantities[id]) itemQuantities[id] = 1;
             itemQuantities[id] += delta;
@@ -423,6 +454,7 @@
                         </div>
                         <h3 class="font-bold text-gray-900 text-sm mb-1">${prod.name}</h3>
                         ${prod.color ? `<p class="text-xs text-gray-500 mb-1">Колір: <b>${prod.color}</b></p>` : ''}
+                        ${prod.sizes ? `<p class="text-xs text-gray-500 mb-1">Розміри: <b>${prod.sizes}</b></p>` : ''}
                         ${prod.description ? `<p class="text-xs text-gray-600 mb-2 line-clamp-2">${prod.description}</p>` : ''}
                         <div class="text-xs text-gray-600 mb-2">
                             <span>В ростовці: <b>${prod.countInRostovka} шт.</b></span> • <span>${prod.unitPrice} грн/шт</span>
